@@ -1,8 +1,8 @@
 # Parrhesia
 
-> Frank speech for language models.
+> Truth-telling for language models.
 
-**Parrhesia replaces sycophancy with honest, well-delivered disagreement — a drop-in LoRA adapter for open LLMs, plus the open methodology and benchmark behind it.** Grounded in Aristotle's account of virtue. Measured, not asserted.
+**Parrhesia is a drop-in LoRA adapter for open LLMs that uses virtue ethics-based character training to replace sycophancy with truth-telling. Parrhesia includes an open virtue training methodology and unique benchmark grounded in Aristotlean virtue ethics.**  
 
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Model on HF](https://img.shields.io/badge/%F0%9F%A4%97%20model-daios%2Fparrhesia--sft--8b-yellow)](https://huggingface.co/daios/parrhesia-sft-8b)
