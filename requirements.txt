@@ -1,0 +1,14 @@
+# Base requirements — data generation, CLI, merge (Mac-safe, no GPU deps)
+#
+# Install: pip install -r requirements.txt
+
+anthropic>=0.40.0
+openai>=1.0.0
+python-dotenv>=1.0.0
+huggingface-hub>=0.20.0
+pyyaml>=6.0
+rich>=13.0.0
+typer>=0.12.0
+safetensors>=0.4.0
+numpy>=1.24.0
+snaptui>=0.2.2

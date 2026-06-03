@@ -1,0 +1,47 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Training artifacts
+*.pt
+*.bin
+*.safetensors
+*.gguf
+adapters/
+
+# Data (tracked — largest file is ~55MB, well under GitHub's 100MB limit)
+
+# Environment
+.env
+.venv/
+.venv-train/
+.venv-serve/
+venv/
+
+# IDE
+.vscode/
+.idea/
+.claude/
+CLAUDE.local.md
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# Coordination / scratch docs not for public
+note_to_*.md
+notes_to_*.md
+
+# Results
+results*.json
+
+# Note: runs/ is NOT gitignored — manifests are the key git-tracked reproducibility record

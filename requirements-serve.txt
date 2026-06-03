@@ -1,0 +1,23 @@
+# Serving and evaluation requirements for RunPod
+#
+# CONFLICTS with requirements-train.txt (different torch versions).
+# Install AFTER training is complete, not alongside unsloth.
+#
+# Used for:
+#   - Introspection generation (vLLM serves DPO adapter)
+#   - Three-way evaluation (vLLM serves base + DPO + merged adapters)
+#
+# Setup:
+#   pip install -r requirements-serve.txt
+
+# vllm 0.20+ ships torch 2.11+cu130 which requires a CUDA 13 driver.
+# RunPod community pods are typically on CUDA 12.x — pin below 0.20 so
+# we get a torch+CUDA combo that runs on 12.8 drivers.
+vllm>=0.10,<0.20
+
+openai>=1.0.0
+anthropic>=0.40.0
+python-dotenv>=1.0.0
+huggingface-hub>=0.20.0
+pyyaml>=6.0
+rich>=13.0.0

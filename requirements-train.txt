@@ -1,0 +1,26 @@
+# Training requirements for RunPod (RTX 4090 / CUDA)
+#
+# CONFLICTS with requirements-serve.txt (different torch versions).
+# Do NOT install both in the same environment.
+#
+# Setup on a fresh pod:
+#   pip install -r requirements-train.txt
+#   pip install --upgrade --force-reinstall --no-cache-dir --no-deps unsloth unsloth_zoo
+
+# Unsloth (fine-tuning acceleration — manages its own torch version)
+unsloth
+unsloth_zoo
+bitsandbytes>=0.45.5,!=0.46.0,!=0.48.0
+
+# HuggingFace training stack (pinned to unsloth-compatible ranges)
+transformers>4.51.3
+trl>0.18.2,!=0.19.0,<=0.24.0
+peft>0.18.0,!=0.11.0
+datasets>3.4.1,!=4.0.*,!=4.1.0,<4.4.0
+accelerate>=1.5.0,<1.13.0
+
+# Utilities
+rich>=13.0.0
+python-dotenv>=1.0.0
+huggingface-hub>=0.20.0
+pyyaml>=6.0

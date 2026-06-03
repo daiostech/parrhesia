@@ -1,0 +1,12 @@
+run_id: run-003-A-qwen3-8b
+approach: A
+base_model: Qwen/Qwen3-8B
+created_at: '2026-02-15T15:59:35.376460+00:00'
+git_sha: 130ef160c4b32c3efcbc1448831b0aab34d0de19
+git_dirty: true
+description: 'OCT-aligned: fresh SFT adapter, NLL aux loss, weighted merge, matched hyperparams'
+environment:
+  python: 3.11.4
+steps: []
+hub_datasets: {}
+hub_models: {}

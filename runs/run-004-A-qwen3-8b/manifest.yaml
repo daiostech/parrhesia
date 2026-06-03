@@ -1,0 +1,37 @@
+run_id: run-004-A-qwen3-8b
+approach: A
+base_model: Qwen/Qwen3-8B
+created_at: '2026-02-18T03:23:11.879930+00:00'
+git_sha: 0fb173201369585eb46bac6d00cb79a8308f0c26
+git_dirty: true
+description: 'Weight sweep: SFT weights 0.00-0.25, eval max_tokens fix'
+environment:
+  python: 3.11.4
+  pytorch: 2.2.2
+  trl: 0.24.0
+steps:
+  - name: adapter_merge
+    description: Merge DPO + SFT adapters at 5 weights (0.00, 0.10, 0.15, 0.20, 0.25)
+    method: safetensors+numpy linear combination
+    source_dpo: adapters/parrhesia-oct-8b-v3
+    source_sft: adapters/parrhesia-introspect-8b-v3
+  - name: quantitative_eval
+    description: 6-model quantitative eval (260 scenarios each)
+    models: [baseline, dpo, w010, w015, w020, w025]
+    note: w020 and w025 failed (Anthropic credit outage)
+  - name: qualitative_eval
+    description: 6-model qualitative eval (standard + hard)
+    models: [baseline, dpo, w010, w015, w020, w025]
+    max_tokens: 2048
+    max_model_len: 8192
+hub_datasets:
+  daios/parrhesia-eval-results: run-004-A-qwen3-8b
+hub_models:
+  daios/parrhesia-merged-8b: run-004-A-qwen3-8b
+results:
+  optimal_weight: 'w015 (DPO*1.0 + SFT*0.15)'
+  quant_avg_baseline: 1.863
+  quant_avg_dpo: 1.974
+  quant_avg_w015: 2.006
+  qual_standard_best: '20/20 (DPO, w010-w020)'
+  qual_hard_best: '21/23 (baseline), 20/23 (DPO, w010-w020)'

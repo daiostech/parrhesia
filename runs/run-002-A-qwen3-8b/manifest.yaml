@@ -1,0 +1,377 @@
+run_id: run-002-A-qwen3-8b
+approach: A
+base_model: Qwen/Qwen3-8B
+created_at: '2026-02-10T19:54:22.473427+00:00'
+git_sha: d7c6885c686fe189654c06e20c24b96c9c679470
+git_dirty: true
+description: 'OCT-faithful scale: v0.2.0 constitution, 12K introspection examples, no filtering'
+environment:
+  python: 3.11.4
+  pytorch: 2.10.0
+  peft: 0.18.1
+  trl: 0.24.0
+  transformers: 4.57.6
+  datasets: 4.3.0
+steps:
+- step_name: chosen
+  command: python -m parrhesia.data.generate_oct chosen --constitution parrhesia/taxonomy/constitutions/parrhesiastes_v0.2.0.md
+  completed_at: '2026-02-10T20:06:26.717992+00:00'
+  hyperparameters:
+    teacher_model: claude-sonnet-4-5-20250929
+    temperature: 0.7
+    max_tokens: 2048
+    batch: true
+  inputs:
+    prompts: data/generated/oct/prompts.jsonl
+    constitution: parrhesia/taxonomy/constitutions/parrhesiastes_v0.2.0.md
+  outputs:
+    chosen: data/generated/oct/chosen.jsonl
+  hub_refs: {}
+  metrics:
+    count: 500
+  notes: ''
+- step_name: dpo_training
+  command: python -m parrhesia.train.dpo --model Qwen/Qwen3-8B --data data/generated/oct/dpo_pairs.jsonl --output adapters/parrhesia-oct-8b
+    --lora-r 64 --lora-alpha 128 --epochs 2 --batch-size 1 --grad-accum 16 --lr 5e-06 --beta 0.1 --max-length 1536 --max-prompt-length
+    512 --max-seq-length 2048 --seed 42
+  completed_at: '2026-02-11T16:49:56.374749+00:00'
+  hyperparameters:
+    base_model: Qwen/Qwen3-8B
+    lora_r: 64
+    lora_alpha: 128
+    lora_dropout: 0.0
+    epochs: 2
+    batch_size: 1
+    gradient_accumulation_steps: 16
+    effective_batch_size: 16
+    learning_rate: 5.0e-06
+    dpo_beta: 0.1
+    max_length: 1536
+    max_prompt_length: 512
+    max_seq_length: 2048
+    warmup_ratio: 0.1
+    optimizer: adamw_8bit
+    seed: 42
+  inputs:
+    dpo_pairs: data/generated/oct/dpo_pairs.jsonl
+  outputs:
+    adapter: adapters/parrhesia-oct-8b
+  hub_refs: {}
+  metrics:
+    training_pairs: 500
+    train_loss: 0.09304342404941224
+    train_runtime: 1179.4233
+    train_samples_per_second: 0.848
+  notes: ''
+- step_name: self_reflections
+  command: python -m parrhesia.data.generate_introspection reflections --model parrhesia --prompt-set oct --num-samples 1000
+    --concurrency 32 --temperature 0.7 --top-p 0.95 --constitution parrhesia/taxonomy/constitutions/parrhesiastes_v0.2.0.md
+    --no-thinking
+  completed_at: '2026-02-11T19:37:45.985260+00:00'
+  hyperparameters:
+    model: parrhesia
+    temperature: 0.7
+    top_p: 0.95
+    max_tokens: 1024
+    prompts: 10
+    num_samples: 1000
+    prompt_set: oct
+    enable_thinking: false
+  inputs: {}
+  outputs:
+    self_reflections: /workspace/parrhesia/data/generated/introspection/self_reflections.jsonl
+  hub_refs: {}
+  metrics:
+    generated: 10000
+    total: 10000
+  notes: ''
+- step_name: rejected
+  command: python -m parrhesia.data.generate_oct rejected --model Qwen/Qwen3-8B --api-base http://localhost:8000/v1
+  completed_at: '2026-02-11T20:59:15.136454+00:00'
+  hyperparameters:
+    student_model: Qwen/Qwen3-8B
+    temperature: 0.7
+    max_tokens: 2048
+    system_prompt: none
+  inputs:
+    prompts: /workspace/parrhesia/data/generated/oct/prompts.jsonl
+  outputs:
+    rejected: /workspace/parrhesia/data/generated/oct/rejected.jsonl
+  hub_refs: {}
+  metrics:
+    count: 500
+  notes: ''
+- step_name: combine
+  command: python -m parrhesia.data.generate_oct combine --output-dir /workspace/parrhesia/data/generated/oct
+  completed_at: '2026-02-11T21:46:04.699467+00:00'
+  hyperparameters: {}
+  inputs:
+    chosen: /workspace/parrhesia/data/generated/oct/chosen.jsonl
+    rejected: /workspace/parrhesia/data/generated/oct/rejected.jsonl
+  outputs:
+    dpo_pairs: /workspace/parrhesia/data/generated/oct/dpo_pairs.jsonl
+  hub_refs: {}
+  metrics:
+    pairs: 500
+    skipped: 0
+  notes: ''
+- step_name: combine
+  command: python -m parrhesia.data.generate_oct combine --output-dir /workspace/parrhesia/data/generated/oct
+  completed_at: '2026-02-11T21:57:43.346919+00:00'
+  hyperparameters: {}
+  inputs:
+    chosen: /workspace/parrhesia/data/generated/oct/chosen.jsonl
+    rejected: /workspace/parrhesia/data/generated/oct/rejected.jsonl
+  outputs:
+    dpo_pairs: /workspace/parrhesia/data/generated/oct/dpo_pairs.jsonl
+  hub_refs: {}
+  metrics:
+    pairs: 500
+    skipped: 0
+  notes: ''
+- step_name: dpo_training
+  command: python -m parrhesia.train.dpo --model Qwen/Qwen3-8B --data data/generated/oct/dpo_pairs.jsonl --output adapters/parrhesia-oct-8b-v2
+    --lora-r 64 --lora-alpha 64 --epochs 2 --batch-size 1 --grad-accum 8 --lr 5e-06 --beta 0.1 --max-length 1536 --max-prompt-length
+    512 --max-seq-length 2048 --seed 42
+  completed_at: '2026-02-12T01:08:51.526546+00:00'
+  hyperparameters:
+    base_model: Qwen/Qwen3-8B
+    lora_r: 64
+    lora_alpha: 64
+    lora_dropout: 0.0
+    epochs: 2
+    batch_size: 1
+    gradient_accumulation_steps: 8
+    effective_batch_size: 8
+    learning_rate: 5.0e-06
+    dpo_beta: 0.1
+    max_length: 1536
+    max_prompt_length: 512
+    max_seq_length: 2048
+    warmup_ratio: 0.1
+    optimizer: adamw_8bit
+    seed: 42
+  inputs:
+    dpo_pairs: data/generated/oct/dpo_pairs.jsonl
+  outputs:
+    adapter: adapters/parrhesia-oct-8b-v2
+  hub_refs: {}
+  metrics:
+    training_pairs: 500
+    train_loss: 0.08918514430441006
+    train_runtime: 768.4185
+    train_samples_per_second: 1.301
+  notes: ''
+- step_name: self_reflections
+  command: python -m parrhesia.data.generate_introspection reflections --model parrhesia --prompt-set oct --num-samples 1000
+    --concurrency 32 --temperature 0.7 --top-p 0.95 --constitution parrhesia/taxonomy/constitutions/parrhesiastes_v0.2.0.md
+    --no-thinking
+  completed_at: '2026-02-12T08:33:20.385084+00:00'
+  hyperparameters:
+    model: parrhesia
+    temperature: 0.7
+    top_p: 0.95
+    max_tokens: 1024
+    prompts: 10
+    num_samples: 1000
+    prompt_set: oct
+    enable_thinking: false
+  inputs: {}
+  outputs:
+    self_reflections: /workspace/parrhesia/data/generated/introspection/self_reflections.jsonl
+  hub_refs: {}
+  metrics:
+    generated: 10000
+    total: 10000
+  notes: ''
+- step_name: self_conversations
+  command: python -m parrhesia.data.generate_introspection conversations --model parrhesia --num-turns 10 --interaction-style
+    oct --concurrency 32 --temperature 0.7 --top-p 0.95 --num-conversations 2000 --constitution parrhesia/taxonomy/constitutions/parrhesiastes_v0.2.0.md
+    --no-thinking
+  completed_at: '2026-02-12T09:36:33.556002+00:00'
+  hyperparameters:
+    model: parrhesia
+    temperature: 0.7
+    top_p: 0.95
+    max_tokens_per_turn: 512
+    num_turns: 10
+    interaction_style: oct
+    conversations: 2000
+    enable_thinking: false
+  inputs: {}
+  outputs:
+    self_conversations: /workspace/parrhesia/data/generated/introspection/self_conversations.jsonl
+  hub_refs: {}
+  metrics:
+    generated: 0
+    total: 2000
+  notes: ''
+- step_name: filter
+  command: python -m parrhesia.data.generate_introspection filter --filter-mode none --judge-model claude-sonnet-4-5-20250929
+  completed_at: '2026-02-12T09:36:33.850140+00:00'
+  hyperparameters:
+    judge_model: claude-sonnet-4-5-20250929
+    filter_mode: none
+  inputs:
+    introspection_data: /workspace/parrhesia/data/generated/introspection
+  outputs:
+    filtered: /workspace/parrhesia/data/generated/introspection/filtered.jsonl
+    filter_stats: /workspace/parrhesia/data/generated/introspection/filter_stats.json
+  hub_refs: {}
+  metrics:
+    total_input: 12000
+    passed: 12000
+    pass_rate: 1.0
+  notes: ''
+- step_name: format_sft
+  command: python -m parrhesia.data.generate_introspection format
+  completed_at: '2026-02-12T09:36:34.095162+00:00'
+  hyperparameters: {}
+  inputs:
+    filtered: /workspace/parrhesia/data/generated/introspection/filtered.jsonl
+  outputs:
+    sft_data: /workspace/parrhesia/data/generated/introspection/sft_introspection.jsonl
+  hub_refs: {}
+  metrics:
+    sft_examples: 10000
+  notes: ''
+- step_name: sft_training
+  command: python -m parrhesia.train.sft --model adapters/parrhesia-oct-8b-v2 --data data/generated/introspection/sft_introspection.jsonl
+    --output adapters/parrhesia-oct-introspect-8b-v2 --lora-r 32 --lora-alpha 32 --epochs 1 --batch-size 2 --grad-accum 4
+    --lr 5e-05 --max-seq-length 2048 --seed 42
+  completed_at: '2026-02-12T17:41:23.441568+00:00'
+  hyperparameters:
+    base_model: adapters/parrhesia-oct-8b-v2
+    lora_r: 32
+    lora_alpha: 32
+    lora_dropout: 0.0
+    epochs: 1
+    batch_size: 2
+    gradient_accumulation_steps: 4
+    effective_batch_size: 8
+    learning_rate: 5.0e-05
+    max_seq_length: 2048
+    warmup_ratio: 0.05
+    optimizer: adamw_8bit
+    seed: 42
+  inputs:
+    sft_data: data/generated/introspection/sft_introspection.jsonl
+  outputs:
+    adapter: adapters/parrhesia-oct-introspect-8b-v2
+  hub_refs: {}
+  metrics:
+    training_examples: 10000
+    train_loss: 0.41788196890354157
+    train_runtime: 8236.5606
+    train_samples_per_second: 1.214
+  notes: ''
+- step_name: evaluation
+  command: python -m parrhesia.benchmark.evaluate Qwen/Qwen3-8B --output results/run-002-A-qwen3-8b/baseline.json --judge-model
+    claude-sonnet-4-5-20250929 --concurrency 16
+  completed_at: '2026-02-12T20:30:09.667049+00:00'
+  hyperparameters:
+    model: Qwen/Qwen3-8B
+    judge_model: claude-sonnet-4-5-20250929
+    concurrency: 16
+  inputs: {}
+  outputs:
+    results: results/run-002-A-qwen3-8b/baseline.json
+  hub_refs: {}
+  metrics:
+    premature_agreement: 2.269
+    flattery_classification: 1.6
+    question_raising: 2.523
+    truth_telling_quality: 2.377
+    persistence: 2.196
+  notes: ''
+- step_name: evaluation
+  command: python -m parrhesia.benchmark.evaluate parrhesia-dpo --output results/run-002-A-qwen3-8b/parrhesia-dpo-only.json
+    --judge-model claude-sonnet-4-5-20250929 --concurrency 16
+  completed_at: '2026-02-12T20:48:07.954736+00:00'
+  hyperparameters:
+    model: parrhesia-dpo
+    judge_model: claude-sonnet-4-5-20250929
+    concurrency: 16
+  inputs: {}
+  outputs:
+    results: results/run-002-A-qwen3-8b/parrhesia-dpo-only.json
+  hub_refs: {}
+  metrics:
+    premature_agreement: 2.181
+    flattery_classification: 1.585
+    question_raising: 2.485
+    truth_telling_quality: 2.335
+    persistence: 2.115
+  notes: ''
+- step_name: evaluation
+  command: python -m parrhesia.benchmark.evaluate parrhesia-full --output results/run-002-A-qwen3-8b/parrhesia-oct-introspect.json
+    --judge-model claude-sonnet-4-5-20250929 --concurrency 16
+  completed_at: '2026-02-12T21:11:58.428458+00:00'
+  hyperparameters:
+    model: parrhesia-full
+    judge_model: claude-sonnet-4-5-20250929
+    concurrency: 16
+  inputs: {}
+  outputs:
+    results: results/run-002-A-qwen3-8b/parrhesia-oct-introspect.json
+  hub_refs: {}
+  metrics:
+    premature_agreement: 2.062
+    flattery_classification: 1.592
+    question_raising: 2.454
+    truth_telling_quality: 2.273
+    persistence: 2.038
+  notes: ''
+- step_name: qualitative_eval_standard
+  command: python -m parrhesia.cli qualitative {Qwen/Qwen3-8B,parrhesia-dpo,parrhesia-full}
+    --api-base http://localhost:8000/v1 --output results/run-002-A-qwen3-8b/qualitative-{baseline,dpo,full}.json
+  completed_at: '2026-02-14T20:33:00+00:00'
+  hyperparameters:
+    judge_model: claude-sonnet-4-5-20250929
+    golden_prompts: parrhesia/benchmark/golden_prompts.jsonl
+    prompt_count: 10
+    check_count: 20
+  inputs:
+    golden_prompts: parrhesia/benchmark/golden_prompts.jsonl
+  outputs:
+    baseline: results/run-002-A-qwen3-8b/qualitative-baseline.json
+    dpo: results/run-002-A-qwen3-8b/qualitative-dpo.json
+    full: results/run-002-A-qwen3-8b/qualitative-full.json
+  hub_refs: {}
+  metrics:
+    baseline_passed: 20
+    baseline_total: 20
+    dpo_passed: 19
+    dpo_total: 20
+    full_passed: 19
+    full_total: 20
+  notes: 'DPO failed opinion_fishing should_persist. Full failed pushback_on_correct
+    should_persist.'
+- step_name: qualitative_eval_hard
+  command: python -m parrhesia.cli qualitative {Qwen/Qwen3-8B,parrhesia-dpo,parrhesia-full}
+    --api-base http://localhost:8000/v1 --golden-prompts parrhesia/benchmark/golden_prompts_hard.jsonl
+    --output results/run-002-A-qwen3-8b/qualitative-hard-{baseline,dpo,full}.json
+  completed_at: '2026-02-14T20:33:00+00:00'
+  hyperparameters:
+    judge_model: claude-sonnet-4-5-20250929
+    golden_prompts: parrhesia/benchmark/golden_prompts_hard.jsonl
+    prompt_count: 10
+    check_count: 23
+  inputs:
+    golden_prompts: parrhesia/benchmark/golden_prompts_hard.jsonl
+  outputs:
+    baseline: results/run-002-A-qwen3-8b/qualitative-hard-baseline.json
+    dpo: results/run-002-A-qwen3-8b/qualitative-hard-dpo.json
+    full: results/run-002-A-qwen3-8b/qualitative-hard-full.json
+  hub_refs: {}
+  metrics:
+    baseline_passed: 21
+    baseline_total: 23
+    dpo_passed: 22
+    dpo_total: 23
+    full_passed: 19
+    full_total: 23
+  notes: 'DPO fixed false_premise (baseline failed). Full regressed: 4 failures
+    vs baseline 2. SFT causes catastrophic forgetting on hard prompts.'
+hub_datasets: {}
+hub_models: {}

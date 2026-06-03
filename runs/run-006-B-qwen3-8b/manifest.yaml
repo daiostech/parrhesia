@@ -1,0 +1,122 @@
+run_id: run-006-B-qwen3-8b
+approach: B
+base_model: Qwen/Qwen3-8B
+created_at: '2026-02-22T05:44:31.433138+00:00'
+git_sha: 4dcf11da9c2d3058c2a65e6bf6a391f1207ec14e
+git_dirty: false
+description: 'Approach B with phronesis revisions: 231/1334 training examples revised for better delivery'
+environment:
+  python: 3.11.4
+steps:
+  - name: classify
+    command: >-
+      python -m parrhesia.data.revise_sft
+      --input data/generated/sft/training_pairs_filtered.jsonl
+      --output data/generated/sft/training_pairs_revised.jsonl
+      --scores data/generated/sft/scores.jsonl
+      --examples data/examples/phronesis_revisions.json
+      --concurrency 10 --dry-run
+    outputs:
+      scores: data/generated/sft/scores.jsonl
+    metrics:
+      score_3: 435
+      score_2: 668
+      score_1: 231
+  - name: revise
+    command: >-
+      python -m parrhesia.data.revise_sft
+      --input data/generated/sft/training_pairs_filtered.jsonl
+      --output data/generated/sft/training_pairs_revised.jsonl
+      --scores data/generated/sft/scores.jsonl
+      --examples data/examples/phronesis_revisions.json
+      --threshold 1 --skip-classify --concurrency 10
+    outputs:
+      revised_data: data/generated/sft/training_pairs_revised.jsonl
+    metrics:
+      total: 1334
+      revised: 231
+  - name: sft
+    command: >-
+      python -m parrhesia.train.sft
+      --model Qwen/Qwen3-8B
+      --data data/generated/sft/training_pairs_revised.jsonl
+      --output adapters/parrhesia-sft-8b
+      --lora-r 64 --lora-alpha 128
+      --epochs 3 --batch-size 2 --grad-accum 16
+      --lr 2e-4 --max-seq-length 2048
+      --run-id run-006-B-qwen3-8b --push
+    hyperparameters:
+      lora_r: 64
+      lora_alpha: 128
+      epochs: 3
+      batch_size: 2
+      grad_accum: 16
+      lr: 0.0002
+      max_seq_length: 2048
+    outputs:
+      adapter: adapters/parrhesia-sft-8b
+    metrics:
+      train_loss: 0.98
+      runtime_min: 9.5
+  - name: eval
+    command: >-
+      bash scripts/runpod_eval.sh
+      --run-id run-006-B-qwen3-8b
+      --base-model Qwen/Qwen3-8B
+      --adapters "parrhesia-sft=./adapters/parrhesia-sft-8b"
+      --training-data data/generated/sft/training_pairs_revised.jsonl
+      --prompt-key messages.0.content
+      --legacy-baseline-contamination
+    outputs:
+      results: results/run-006-B-qwen3-8b/
+    metrics:
+      quant_baseline_avg: 1.848
+      quant_sft_avg: 2.902
+      qual_standard_baseline: 20/20
+      qual_standard_sft: 16/20
+      qual_hard_baseline: 15/19
+      qual_hard_sft: 18/19
+    note: >-
+      --legacy-baseline-contamination backfilled so replay reproduces the
+      original (pre-fix) behavior: the contamination check was applied to the
+      baseline iteration as well as the SFT. In Run 6 the LLM judge happened
+      to flag the same 2 hard prompts for both models, so denominators matched
+      (15/19 vs 18/19) — the bug was present but the comparison wasn't
+      asymmetrically distorted. Numbers stand as published.
+  - name: qualitative_hard_baseline_reeval
+    command: >-
+      parrhesia qualitative Qwen/Qwen3-8B
+      --api-base http://localhost:8000/v1
+      --output results/run-006-B-qwen3-8b/qualitative-hard-baseline-corrected.json
+      --golden-prompts parrhesia/benchmark/golden_prompts_hard.jsonl
+      --skip-contamination
+    completed_at: '2026-05-01T04:07:39.276484+00:00'
+    hyperparameters:
+      judge_model: claude-sonnet-4-5-20250929
+      model: Qwen/Qwen3-8B
+      skip_contamination: true
+    inputs:
+      golden_prompts: parrhesia/benchmark/golden_prompts_hard.jsonl
+    outputs:
+      qualitative: results/run-006-B-qwen3-8b/qualitative-hard-baseline-corrected.json
+    metrics:
+      total_checks: 23
+      passed: 20
+      failed: 3
+      qual_hard_baseline_corrected: 20/23
+    note: >-
+      Baseline-only re-eval against all 10 hard golden prompts with
+      --skip-contamination, after the contamination-bug fix. Run 6 baseline
+      under the bug was 15/19 on 8 prompts; corrected is 20/23 across all 10.
+      On the same 8 prompts the SFT was evaluated on, corrected baseline =
+      16/19 (vs originally reported 15/19 — 1 check of judge variance).
+      SFT result (18/19) stands.
+hub_datasets: {}
+hub_models:
+  # Migrated 2026-05-02 from daios/parrhesia-oct-introspect-8b@run-006-B-qwen3-8b
+  # (legacy repo name) to match the local adapter directory convention. Content
+  # is identical; only the repo name changed. The old branch still exists for
+  # reproducibility — see hub_models_legacy.
+  adapter: daios/parrhesia-sft-8b@run-006-B-qwen3-8b
+hub_models_legacy:
+  adapter: daios/parrhesia-oct-introspect-8b@run-006-B-qwen3-8b
