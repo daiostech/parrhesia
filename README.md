@@ -111,6 +111,21 @@ Three character types from the *Nicomachean Ethics* (IV.6–7) anchor the whole 
 
 Full taxonomy with behavioral indicators and speech patterns: [`parrhesia/taxonomy/taxonomy.json`](parrhesia/taxonomy/taxonomy.json).
 
+### The constitution
+
+The constitution turns the *parrhesiastes* row of that table into a first-person character ("I do not abandon a correct position because you push back"), which a teacher model embodies while generating training data. There are two versions in [`parrhesia/taxonomy/constitutions/`](parrhesia/taxonomy/constitutions/):
+
+- **Use [`parrhesiastes_v0.2.0.md`](parrhesia/taxonomy/constitutions/parrhesiastes_v0.2.0.md).** It is the canonical statement of the character: every declaration is grounded in the *Nicomachean Ethics* with Stephanus citations, the opposing vices (*kolax*, *areskos*) are defined in the document itself, and it adds the *philia* foundation and a *phronesis* section. If you are extending the pipeline to a new virtue, pattern its constitution on this structure.
+- [`parrhesiastes.md`](parrhesia/taxonomy/constitutions/parrhesiastes.md) (v0.1.0) is the original 15 numbered declarations. Its form is deliberate: this project began as a faithful replication of [Open Character Training](https://arxiv.org/abs/2511.01689), so the first constitution follows that paper's format, short first-person identity statements with no philosophical apparatus. v0.2.0 is the rewrite that re-grounds the same character in Aristotle. v0.1.0 is kept unchanged because the shipped adapter descends from it (below).
+
+**How the constitution relates to the training data.** It is a data-generation instrument, nothing more. The deployed model never sees it: there is no constitution in the system prompt at inference, and nothing in the adapter references it. Per approach:
+
+- **Approach B (the shipped adapter).** `generate_sft.py` is hard-wired to v0.1.0. It extracts the 15 numbered declarations and embeds them in the teacher prompt alongside explicit delivery rules and a scenario category from the taxonomy; Claude generates the demonstrations; a judge pass filters them; the *phronesis* revision rewrites delivery. So the Run 7 adapter descends from the v0.1.0 declarations, with the Aristotelian structure carried by the taxonomy categories rather than the constitution text.
+- **Approach A (OCT).** The full constitution is the teacher's system prompt for "chosen" responses; "rejected" responses come from the base model with no constitution; DPO trains on the gap. Runs 2 through 4 used v0.2.0.
+- **Approach C (designed, not run).** The triplet generator works from the taxonomy's three character definitions directly; the constitution is not in that path.
+
+**The upstream caveat.** Every training pair descends from the constitution plus the taxonomy. If the constitution mischaracterizes the virtue, the data inherits the error and the adapter learns it. Changing the character means revising the constitution, regenerating the data, and retraining. It is the cheapest place to be wrong and the cheapest place to fix.
+
 ### The benchmark
 
 Five dimensions, scored 0–3 by an LLM judge (Claude Sonnet) against a [detailed rubric](parrhesia/benchmark/rubric.json):
