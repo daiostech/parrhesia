@@ -120,7 +120,7 @@ The constitution turns the *parrhesiastes* row of that table into a first-person
 
 **How the constitution relates to the training data.** It is a data-generation instrument, nothing more. The deployed model never sees it: there is no constitution in the system prompt at inference, and nothing in the adapter references it. Per approach:
 
-- **Approach B (the shipped adapter).** `generate_sft.py` is hard-wired to v0.1.0. It extracts the 15 numbered declarations and embeds them in the teacher prompt alongside explicit delivery rules and a scenario category from the taxonomy; Claude generates the demonstrations; a judge pass filters them; the *phronesis* revision rewrites delivery. So the Run 7 adapter descends from the v0.1.0 declarations, with the Aristotelian structure carried by the taxonomy categories rather than the constitution text.
+- **Approach B (the shipped adapter).** `generate_sft.py` defaults to v0.1.0, selectable with `--constitution`. It extracts the declarations and embeds them in the teacher prompt alongside explicit delivery rules and a scenario category from the taxonomy; Claude generates the demonstrations; a judge pass filters them; the *phronesis* revision rewrites delivery. So the Run 7 adapter descends from the v0.1.0 declarations, with the Aristotelian structure carried by the taxonomy categories rather than the constitution text. Point `--constitution` at v0.2.0 or a new virtue's file to generate data for a different character.
 - **Approach A (OCT).** The full constitution is the teacher's system prompt for "chosen" responses; "rejected" responses come from the base model with no constitution; DPO trains on the gap. Runs 2 through 4 used v0.2.0.
 - **Approach C (designed, not run).** The triplet generator works from the taxonomy's three character definitions directly; the constitution is not in that path.
 
@@ -185,6 +185,8 @@ Four phases. Data generation runs locally; training and evaluation need a GPU. F
 
 ```bash
 # 1. Generate SFT demonstrations (local, ~$8 in Claude API)
+#    --constitution defaults to v0.1.0 (the shipped Run 7 lineage);
+#    pass parrhesia/taxonomy/constitutions/parrhesiastes_v0.2.0.md for the Aristotelian version
 python -m parrhesia.data.generate_sft --num-per-category 200 --output-dir data/generated/sft --filter
 
 # 2. Phronesis revision (local, ~$2) — acknowledge-then-tell, without softening

@@ -21,6 +21,7 @@ from __future__ import annotations
 import gc
 import json
 import math
+import os
 import random
 import time
 from pathlib import Path
@@ -250,14 +251,57 @@ FAILURE_MODES = [
 # Core helpers
 # ---------------------------------------------------------------------------
 
-def _get_constitution_excerpt() -> str:
-    """Load and condense the constitution to numbered lines."""
-    constitution = CONSTITUTION_PATH.read_text()
-    return "\n".join(
-        line
-        for line in constitution.split("\n")
-        if line.strip().startswith(tuple("0123456789"))
-    )
+def _prose_declaration_lines(lines: list[str]):
+    """Yield declaration prose from a v0.2.0-style constitution.
+
+    Keeps section headings and first-person declaration sentences; drops the
+    scholarly apparatus (inline Stephanus citations, the metadata header, the
+    citation-summary and version-history sections) that is not a behavioral
+    instruction for the teacher.
+    """
+    skip_rest = False
+    for line in lines:
+        s = line.strip()
+        # Trailing reference sections run to end of file once encountered.
+        if s.startswith("**Stephanus") or s.startswith("**Version History"):
+            skip_rest = True
+        if skip_rest or not s or s == "---":
+            continue
+        # Inline citations, e.g. "*(Reference: NE IV.7, 1127a13-28 ...)*".
+        if s.startswith("*(") or s.startswith("(Reference"):
+            continue
+        # Metadata header labels near the top of the document.
+        if s.startswith(("**Version", "**Date", "**Philosophical")):
+            continue
+        # Raw citation bullets in the philosophical-foundation list.
+        if s.startswith("- ") and "NE " in s:
+            continue
+        yield line
+
+
+def _get_constitution_excerpt(path: str | Path | None = None) -> str:
+    """Load and condense a constitution into a teacher-prompt excerpt.
+
+    Format-aware: a v0.1.0-style file (numbered first-person declarations) is
+    condensed to those numbered lines; a v0.2.0-style prose file keeps its
+    declarations and headings minus the citation apparatus. Raises if the
+    excerpt comes back empty rather than silently embedding a blank instruction.
+    """
+    path = Path(path) if path else CONSTITUTION_PATH
+    lines = path.read_text().split("\n")
+
+    numbered = [line for line in lines if line.strip().startswith(tuple("0123456789"))]
+    if numbered:
+        excerpt = "\n".join(numbered).strip()
+    else:
+        excerpt = "\n".join(_prose_declaration_lines(lines)).strip()
+
+    if not excerpt:
+        raise ValueError(
+            f"Constitution excerpt is empty for {path}. Expected numbered "
+            "declarations (v0.1.0) or declaration prose (v0.2.0); check the file."
+        )
+    return excerpt
 
 
 def _get_turn_instruction(is_multi_turn: bool) -> str:
@@ -498,6 +542,8 @@ def generate_sft_data(
     failure_modes: bool = False,
     filter_quality: bool = False,
     teacher_model: str = DEFAULT_TEACHER_MODEL,
+    constitution_path: str | Path | None = None,
+    run_id: str | None = None,
 ) -> Path:
     """Generate SFT training data across all taxonomy categories.
 
@@ -512,6 +558,11 @@ def generate_sft_data(
         failure_modes: Generate 50 additional examples per failure mode (250 total).
         filter_quality: Post-generation quality filter using Claude judge.
         teacher_model: Model to use for generation.
+        constitution_path: Constitution file the teacher embodies. Defaults to
+            parrhesiastes.md (v0.1.0), the constitution the shipped adapter
+            descends from; pass parrhesiastes_v0.2.0.md or a new virtue's
+            constitution to generate data for a different character.
+        run_id: Run to record this step against (falls back to PARRHESIA_RUN_ID).
 
     Returns:
         Path to the output JSONL file (filtered if --filter, otherwise unfiltered).
@@ -523,7 +574,8 @@ def generate_sft_data(
     with open(TAXONOMY_PATH) as f:
         taxonomy = json.load(f)
 
-    constitution_excerpt = _get_constitution_excerpt()
+    constitution_file = Path(constitution_path) if constitution_path else CONSTITUTION_PATH
+    constitution_excerpt = _get_constitution_excerpt(constitution_file)
     categories = taxonomy["scenario_categories"]
 
     # Calculate batching
@@ -535,6 +587,7 @@ def generate_sft_data(
         total_api_calls += fm_batches_per_mode * len(FAILURE_MODES)
 
     console.print(f"[bold]SFT Data Generation[/bold]")
+    console.print(f"  Constitution: {constitution_file.name}")
     console.print(f"  Categories: {len(categories)}")
     console.print(f"  Per category: {num_per_category} ({num_batches} batch(es) × {per_batch})")
     console.print(f"  Multi-turn ratio: {multi_turn_ratio:.0%}")
@@ -670,21 +723,57 @@ def generate_sft_data(
         gc.collect()
 
         console.print(f"[bold green]Filtered {passed} SFT pairs → {filtered_path}")
-        return filtered_path
+        final_path = filtered_path
+    else:
+        # Shuffle the unfiltered file in place
+        all_pairs = []
+        with open(output_path) as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    all_pairs.append(json.loads(line))
+        random.shuffle(all_pairs)
+        with open(output_path, "w") as f:
+            for pair in all_pairs:
+                f.write(json.dumps(pair) + "\n")
+        final_path = output_path
 
-    # Shuffle the unfiltered file in place
-    all_pairs = []
-    with open(output_path) as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                all_pairs.append(json.loads(line))
-    random.shuffle(all_pairs)
-    with open(output_path, "w") as f:
-        for pair in all_pairs:
-            f.write(json.dumps(pair) + "\n")
+    # Record step in manifest. The resolved constitution path is recorded
+    # explicitly so a replay reproduces the same character regardless of any
+    # future change to the default.
+    _run_id = run_id or os.environ.get("PARRHESIA_RUN_ID")
+    if _run_id:
+        from parrhesia.manifest import record_step
 
-    return output_path
+        cmd = (
+            f"python -m parrhesia.data.generate_sft "
+            f"--num-per-category {num_per_category} "
+            f"--output-dir {output_dir} "
+            f"--constitution {constitution_file}"
+        )
+        if failure_modes:
+            cmd += " --failure-modes"
+        if filter_quality:
+            cmd += " --filter"
+
+        record_step(
+            _run_id,
+            step_name="generate_sft",
+            command=cmd,
+            hyperparameters={
+                "teacher_model": teacher_model,
+                "num_per_category": num_per_category,
+                "batch_size": batch_size,
+                "multi_turn_ratio": multi_turn_ratio,
+                "failure_modes": failure_modes,
+                "filter": filter_quality,
+                "temperature": 0.8,
+            },
+            inputs={"taxonomy": str(TAXONOMY_PATH), "constitution": str(constitution_file)},
+            outputs={"training_pairs": str(final_path)},
+        )
+
+    return final_path
 
 
 # ---------------------------------------------------------------------------
@@ -707,6 +796,12 @@ def main():
                         help="Generate 50 targeted examples per Run 4 failure mode (250 total)")
     parser.add_argument("--filter", action="store_true",
                         help="Post-generation quality filter using Claude judge")
+    parser.add_argument("--constitution", type=str, default=None,
+                        help="Constitution file the teacher embodies "
+                             "(default: parrhesiastes.md, v0.1.0). Pass "
+                             "parrhesiastes_v0.2.0.md or a new virtue's constitution.")
+    parser.add_argument("--run-id", type=str, default=None,
+                        help="Run to record this step against (default: $PARRHESIA_RUN_ID)")
     args = parser.parse_args()
 
     generate_sft_data(
@@ -717,6 +812,8 @@ def main():
         failure_modes=args.failure_modes,
         filter_quality=args.filter,
         teacher_model=args.model,
+        constitution_path=args.constitution,
+        run_id=args.run_id,
     )
 
 
