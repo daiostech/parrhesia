@@ -212,8 +212,22 @@ def record_step(
     metrics: dict[str, Any] | None = None,
     notes: str = "",
 ) -> None:
-    """Append a step record to the manifest for the given run."""
-    manifest = load_manifest(run_id)
+    """Append a step record to the manifest for the given run.
+
+    No-ops with a warning if the manifest is missing. This happens when a step
+    runs somewhere that only has a fresh clone (e.g. a RunPod pod cloning the
+    repo, where the run's manifest was created locally and never pushed). A
+    missing manifest should never crash the pipeline step that is recording
+    after its real work (training, eval) has already completed and been saved.
+    """
+    try:
+        manifest = load_manifest(run_id)
+    except FileNotFoundError:
+        print(
+            f"[manifest] runs/{run_id}/manifest.yaml not found; "
+            f"skipping step record for '{step_name}'."
+        )
+        return
 
     step = {
         "step_name": step_name,
