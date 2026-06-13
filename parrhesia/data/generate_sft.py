@@ -24,6 +24,7 @@ import math
 import os
 import random
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import anthropic
@@ -483,10 +484,12 @@ def _filter_with_judge(
     input_path: Path,
     filtered_path: Path,
     judge_model: str = DEFAULT_JUDGE_MODEL,
+    concurrency: int = 8,
 ) -> int:
     """Filter examples using Claude judge. Reads from input, writes passing to filtered_path.
 
     Creates a fresh client for the filter phase. Returns count of passing examples.
+    Judge calls run concurrently; passing pairs are written from the main thread.
     """
     client = anthropic.Anthropic()
     passed_count = 0
@@ -495,32 +498,35 @@ def _filter_with_judge(
     # Clear filtered file
     filtered_path.write_text("")
 
+    def _judge(pair: dict) -> tuple[dict, bool]:
+        prompt = QUALITY_FILTER_PROMPT.format(conversation=_format_conversation(pair))
+        verdict_text = _api_call_with_retry(
+            client,
+            model=judge_model,
+            max_tokens=16,
+            temperature=0.0,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return pair, verdict_text.strip().upper() == "PASS"
+
     with Progress() as progress:
         task = progress.add_task("Quality filtering...", total=len(pairs))
 
-        for pair in pairs:
-            conversation_text = _format_conversation(pair)
-            prompt = QUALITY_FILTER_PROMPT.format(conversation=conversation_text)
+        with ThreadPoolExecutor(max_workers=concurrency) as executor:
+            futures = [executor.submit(_judge, pair) for pair in pairs]
+            for future in as_completed(futures):
+                pair, passed = future.result()
+                if passed:
+                    _append_jsonl(filtered_path, [pair])
+                    passed_count += 1
+                else:
+                    failed_count += 1
 
-            verdict_text = _api_call_with_retry(
-                client,
-                model=judge_model,
-                max_tokens=16,
-                temperature=0.0,
-                messages=[{"role": "user", "content": prompt}],
-            )
+                progress.advance(task)
 
-            if verdict_text.strip().upper() == "PASS":
-                _append_jsonl(filtered_path, [pair])
-                passed_count += 1
-            else:
-                failed_count += 1
-
-            progress.advance(task)
-
-            # Periodic GC every 200 judge calls
-            if (passed_count + failed_count) % 200 == 0:
-                gc.collect()
+                # Periodic GC every 200 judge calls
+                if (passed_count + failed_count) % 200 == 0:
+                    gc.collect()
 
     pass_rate = passed_count / len(pairs) * 100 if pairs else 0
     console.print(
@@ -544,6 +550,7 @@ def generate_sft_data(
     teacher_model: str = DEFAULT_TEACHER_MODEL,
     constitution_path: str | Path | None = None,
     run_id: str | None = None,
+    concurrency: int = 8,
 ) -> Path:
     """Generate SFT training data across all taxonomy categories.
 
@@ -600,49 +607,55 @@ def generate_sft_data(
     output_path.write_text("")
     total_pairs = 0
 
-    # --- Phase 1: Category-based generation ---
+    # --- Phase 1: Category-based generation (concurrent) ---
     # Fresh client per phase to avoid connection pool growth
     client = anthropic.Anthropic()
 
+    # Build every batch job up front so the API calls can run in parallel. The
+    # slow part (generation, ~100s/call) runs in worker threads; results are
+    # written from the main thread as they complete, so no write lock is needed.
+    batch_jobs = []
+    global_batch_idx = 0
+    for category in categories:
+        for batch_idx in range(num_batches):
+            is_multi_turn = (batch_idx % max(1, round(1 / multi_turn_ratio))) == 1
+            batch_jobs.append((category, global_batch_idx, is_multi_turn))
+            global_batch_idx += 1
+
+    def _run_batch(job: tuple) -> tuple[str, list[dict]]:
+        category, gbi, is_multi_turn = job
+        pairs = _generate_batch(
+            client=client,
+            teacher_model=teacher_model,
+            constitution_excerpt=constitution_excerpt,
+            category_name=category["name"],
+            category_description=category["description"],
+            count=per_batch,
+            variation_index=gbi,
+            is_multi_turn=is_multi_turn,
+        )
+        return category["name"], pairs
+
+    cat_counts = {category["name"]: 0 for category in categories}
     with Progress() as progress:
         task = progress.add_task(
             "Generating category examples...",
-            total=num_batches * len(categories),
+            total=len(batch_jobs),
         )
-
-        global_batch_idx = 0
-        for category in categories:
-            cat_count = 0
-            for batch_idx in range(num_batches):
-                is_multi_turn = (batch_idx % max(1, round(1 / multi_turn_ratio))) == 1
-
-                pairs = _generate_batch(
-                    client=client,
-                    teacher_model=teacher_model,
-                    constitution_excerpt=constitution_excerpt,
-                    category_name=category["name"],
-                    category_description=category["description"],
-                    count=per_batch,
-                    variation_index=global_batch_idx,
-                    is_multi_turn=is_multi_turn,
-                )
-
-                # Write to disk immediately
+        with ThreadPoolExecutor(max_workers=concurrency) as executor:
+            futures = [executor.submit(_run_batch, job) for job in batch_jobs]
+            for future in as_completed(futures):
+                cat_name, pairs = future.result()
                 if pairs:
                     _append_jsonl(output_path, pairs)
-                    cat_count += len(pairs)
+                    cat_counts[cat_name] += len(pairs)
                     total_pairs += len(pairs)
-
-                del pairs
-                global_batch_idx += 1
                 progress.advance(task)
 
-            console.print(
-                f"  [green]{category['name']}[/green]: {cat_count} pairs generated"
-            )
-
-            # GC after each category to release httpx buffers
-            gc.collect()
+    for category in categories:
+        console.print(
+            f"  [green]{category['name']}[/green]: {cat_counts[category['name']]} pairs generated"
+        )
 
     # Drop the generation client before starting failure modes
     del client
@@ -718,7 +731,7 @@ def generate_sft_data(
                 f.write(json.dumps(pair) + "\n")
 
         filtered_path = output_dir / "training_pairs_filtered.jsonl"
-        passed = _filter_with_judge(all_pairs, output_path, filtered_path)
+        passed = _filter_with_judge(all_pairs, output_path, filtered_path, concurrency=concurrency)
         del all_pairs
         gc.collect()
 
@@ -802,6 +815,8 @@ def main():
                              "parrhesiastes_v0.2.0.md or a new virtue's constitution.")
     parser.add_argument("--run-id", type=str, default=None,
                         help="Run to record this step against (default: $PARRHESIA_RUN_ID)")
+    parser.add_argument("--concurrency", type=int, default=8,
+                        help="Parallel API calls for generation and filtering (default: 8)")
     args = parser.parse_args()
 
     generate_sft_data(
@@ -814,6 +829,7 @@ def main():
         teacher_model=args.model,
         constitution_path=args.constitution,
         run_id=args.run_id,
+        concurrency=args.concurrency,
     )
 
 
