@@ -1,6 +1,12 @@
-# Parrhesia
-
-> Truth-telling for language models.
+```
+██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗ █████╗ 
+██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║██╔════╝██╔════╝██║██╔══██╗
+██████╔╝███████║██████╔╝██████╔╝███████║█████╗  ███████╗██║███████║
+██╔═══╝ ██╔══██║██╔══██╗██╔══██╗██╔══██║██╔══╝  ╚════██║██║██╔══██║
+██║     ██║  ██║██║  ██║██║  ██║██║  ██║███████╗███████║██║██║  ██║
+╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚═╝╚═╝  ╚═╝
+              παρρησία · truth-telling virtue adapter
+```
 
 **Parrhesia is a drop-in LoRA adapter for open LLMs using virtue ethics-based character training to replace sycophancy with truth-telling. Parrhesia includes an open virtue training methodology and unique benchmark grounded in Aristotlean virtue ethics.**  
 
