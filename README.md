@@ -14,12 +14,13 @@
 [![Model on HF](https://img.shields.io/badge/%F0%9F%A4%97%20model-daios%2Fparrhesia--sft--8b-yellow)](https://huggingface.co/daios/parrhesia-sft-8b)
 [![Eval results on HF](https://img.shields.io/badge/%F0%9F%A4%97%20eval-parrhesia--eval--results-yellow)](https://huggingface.co/datasets/daios/parrhesia-eval-results)
 
-**Aristotelian virtue training for open-weight language models, built by [daios](https://daios.tech).** It replaces sycophancy with truth-telling through a drop-in LoRA adapter. Virtue training is a third path to RLHF and Constitutional AI.
+**Aristotelian virtue training for open-weight language models, built by [daios](https://daios.tech).** Parrhesia replaces sycophancy with truth-telling through a drop-in LoRA adapter. Virtue training is a third path to RLHF and Constitutional AI.
 
 The adapter targets open-weight bases (Qwen3-8B today, Qwen3-14B next). The benchmark runs against any OpenAI-compatible endpoint, so you can score your own production model on the same Aristotelian taxonomy without adopting anything. Method, adapter, benchmark, and run logs are open.
 
-| A character disposition | Trained into the weights, rather than pinned by a system prompt a user can override. |
+|  |  |
 | --- | --- |
+| A character disposition | Trained into the weights, rather than pinned by a system prompt a user can override. |
 | Measured | Five dimensions: premature agreement, flattery type, question-raising, truth-telling quality, and persistence under pressure. |
 | Novel failure modes | Most benchmarks ask only whether the model caved. This one also scores how it fails, passive obsequiousness (*areskos*) versus strategic flattery (*kolax*), because the cure differs. |
 | Runs on your model | Adapter for open-weight bases, benchmark against any endpoint, public run logs, reproducible pipeline. |
