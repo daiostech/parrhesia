@@ -13,6 +13,7 @@
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Model on HF](https://img.shields.io/badge/%F0%9F%A4%97%20model-daios%2Fparrhesia--sft--8b-yellow)](https://huggingface.co/daios/parrhesia-sft-8b)
 [![Eval results on HF](https://img.shields.io/badge/%F0%9F%A4%97%20eval-parrhesia--eval--results-yellow)](https://huggingface.co/datasets/daios/parrhesia-eval-results)
+[![Funded by Cosmos Institute](https://img.shields.io/badge/funded%20by-Cosmos%20Institute-0b1d3a)](https://cosmos-institute.org/)
 
 **Aristotelian virtue training for open-weight language models, built by [daios](https://daios.tech).** Parrhesia replaces sycophancy with truth-telling through a drop-in LoRA adapter. Virtue training is a third path to RLHF and Constitutional AI.
 
@@ -21,8 +22,7 @@ The adapter targets open-weight bases (Qwen3-8B today, Qwen3-14B next). The benc
 |  |  |
 | --- | --- |
 | A character disposition | LoRA trains the disposition into the model's weights, rather than through a system prompt a user can easily override. |
-| Measured | The benchmark has five dimensions: premature agreement, flattery type, question-raising, truth-telling quality, and persistence under pressure. |
-| Novel failure modes | Most benchmarks ask only whether the model caved. This one also scores *how* the model fails, passive obsequiousness (*areskos*) versus strategic flattery (*kolax*). |
+| Novel failure modes | Most benchmarks ask only whether the model caved. This one also scores *how* the model fails, passive obsequiousness (*areskos*) versus strategic flattery (*kolax*). The benchmark scores five dimensions: premature agreement, flattery type, question-raising, truth-telling quality, and persistence under pressure. |
 | Runs on your model | Adapter for open-weight bases, benchmark against any endpoint, public run logs, reproducible pipeline. |
 
 ---
