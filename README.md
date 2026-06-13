@@ -20,9 +20,9 @@ The adapter targets open-weight bases (Qwen3-8B today, Qwen3-14B next). The benc
 
 |  |  |
 | --- | --- |
-| A character disposition | Trained into the weights, rather than pinned by a system prompt a user can override. |
-| Measured | Five dimensions: premature agreement, flattery type, question-raising, truth-telling quality, and persistence under pressure. |
-| Novel failure modes | Most benchmarks ask only whether the model caved. This one also scores how it fails, passive obsequiousness (*areskos*) versus strategic flattery (*kolax*), because the cure differs. |
+| A character disposition | LoRA trains the disposition into the model's weights, rather than through a system prompt a user can easily override. |
+| Measured | The benchmark has five dimensions: premature agreement, flattery type, question-raising, truth-telling quality, and persistence under pressure. |
+| Novel failure modes | Most benchmarks ask only whether the model caved. This one also scores *how* the model fails, passive obsequiousness (*areskos*) versus strategic flattery (*kolax*). |
 | Runs on your model | Adapter for open-weight bases, benchmark against any endpoint, public run logs, reproducible pipeline. |
 
 ---
