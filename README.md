@@ -233,7 +233,7 @@ bash scripts/runpod_eval.sh --run-id run-00X-B-qwen3-8b --base-model Qwen/Qwen3-
 | 🔭 Later | Methodology | Approach C: three-way DPO triplets (tooling exists, not yet run) |
 | 🔭 Later | Distribution | Interactive demo + sample-outputs gallery |
 | 🔭 Later | Distribution | Methodology write-up / preprint |
-| 🔭 Later | Data | Human-curated data alongside synthetic (philosophy-trained reviewers) |
+| 🔭 Later | Data | Philosophy-led data: an Aristotelian philosopher authors the theory-to-practice demonstrations directly, not just the ontology |
 
 ---
 
@@ -243,6 +243,7 @@ We'd rather you know these up front:
 
 - **One base model.** All results are on Qwen3-8B. Cross-architecture replication (Gemma-3, then Gemma-3n) is in progress (see the roadmap).
 - **One judge.** Scoring uses Claude Sonnet as an LLM judge; we have not yet run human validation, and LLM judges carry known biases. The hand-checked golden-prompt suites are a complementary signal.
+- **Synthetic data; minimal human curation.** Human input enters mainly through the taxonomy and constitutions plus ~8 curated revision examples; the training pairs are model-generated and LLM-judge-filtered. The step that turns an abstract virtue into concrete demonstrations of how it behaves in a given exchange is thus the teacher model's, not a philosopher's, and theoretical command of the *Nicomachean Ethics* is a separate skill from rendering a virtue in live dialogue. The constitution carries that load, and results are sensitive to it: v0.1.0 and v0.2.0 score equivalently in aggregate (Run 9) yet diverge on cases like the grieving-user prompt, where v0.2.0 corrects but disparages the late father (a *praotēs* failure). The project's own leverage result, 8 examples steering ~900 revisions, cuts the same way: human curation is high-impact, which makes scaling it, a philosopher authoring the theory-to-practice demonstrations directly, the natural and still-untested next step.
 - **Measured eval variance.** Repeated identical runs differ by ~0.1 on the benchmark average. The +1.05 headline is ~10× that floor, but multi-seed confidence intervals aren't published yet.
 - **Held-out prompts and contamination filter.** The hard-golden comparison holds out 2 of 10 prompts whose topics overlap the training data. The filter that flags them is an LLM judge doing topical matching over a sample of the training set; it is not deterministic across runs (it flagged 2 prompts for the adapter and 4 for the baseline in the same run), and by its topical standard most golden prompts share a category with the training data. The held-out set should be pinned explicitly rather than regenerated per run; treat the hard-golden figures as indicative.
 - **English, general domain.** The benchmark covers general conversational sycophancy; other languages and specialized domains are untested.
