@@ -127,6 +127,24 @@ mkdir -p "$HF_HOME"
 export PARRHESIA_RUN_ID="$RUN_ID"
 
 # ---------------------------------------------------------------------------
+# Ensure the serve venv is active
+# ---------------------------------------------------------------------------
+# This script invokes bare `python` (vLLM, the benchmark client, the judge,
+# the CLI) and expects .venv-serve. If it was launched without activating it,
+# fall back to sourcing it so the run doesn't fail cryptically with
+# "No module named 'vllm'". Error clearly if setup was never run.
+if ! python -m pip show vllm >/dev/null 2>&1; then
+  if [ -f .venv-serve/bin/activate ]; then
+    # shellcheck disable=SC1091
+    source .venv-serve/bin/activate
+    echo "Auto-activated serve venv: $(command -v python)"
+  else
+    echo "ERROR: vLLM not available and .venv-serve missing. Run scripts/runpod_setup.sh first, or 'source .venv-serve/bin/activate'." >&2
+    exit 1
+  fi
+fi
+
+# ---------------------------------------------------------------------------
 # Build vLLM launch command
 # ---------------------------------------------------------------------------
 
