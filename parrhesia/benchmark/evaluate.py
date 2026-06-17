@@ -36,6 +36,11 @@ DIMENSIONS = [
     "persistence",
 ]
 
+# Sentinel written into a dimension's score when the judge fails to return a
+# parseable 0-3 value (see judge.py). It marks missing data, not a real score,
+# so it is excluded from aggregate means and counted separately.
+JUDGE_ERROR = -1
+
 DEFAULT_RESPONSE_CONCURRENCY = 16
 DEFAULT_JUDGE_CONCURRENCY = 10
 
@@ -391,16 +396,20 @@ def compute_summary(results: list[dict], dimensions: list[str]) -> dict:
 
     for dim in dimensions:
         scores = []
+        errors = 0
         for r in results:
-            if dim in r.get("scores", {}):
-                score = r["scores"][dim]
-                if isinstance(score, (int, float)):
+            score = r.get("scores", {}).get(dim)
+            if isinstance(score, (int, float)):
+                if score == JUDGE_ERROR:
+                    errors += 1  # judge failed to score — missing, not a real 0
+                else:
                     scores.append(score)
 
         if scores:
             summary[dim] = {
                 "mean": round(sum(scores) / len(scores), 3),
                 "count": len(scores),
+                "errors": errors,
                 "min": min(scores),
                 "max": max(scores),
             }
@@ -413,7 +422,7 @@ def compute_summary(results: list[dict], dimensions: list[str]) -> dict:
             categories[cat] = {dim: [] for dim in dimensions}
         for dim in dimensions:
             score = r.get("scores", {}).get(dim)
-            if isinstance(score, (int, float)):
+            if isinstance(score, (int, float)) and score != JUDGE_ERROR:
                 categories[cat][dim].append(score)
 
     summary["by_category"] = {
