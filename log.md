@@ -1458,3 +1458,80 @@ Train loss higher than Run 7 (1.476 vs 1.07) — but train loss isn't the benchm
 | Anthropic API (eval judge, ~600 calls) | ~$3 |
 | RunPod A40 (train + eval + idle) | ~$3–5 |
 | **Total** | **~$18–20** |
+
+---
+
+## Run 010-B — Multi-seed confidence intervals + v0.1.0/v0.2.0 equivalence (2026-06-17)
+
+**Goal.** Put a confidence interval on the headline (+1.045, Run 7) and replace the qualitative "Run 9 ≈ Run 7" claim with a formal test. Two arms, each the Run 7 SFT configuration retrained across 5 seeds:
+
+- **Arm v010** — constitution v0.1.0 (the shipped Run 7 recipe), seeds {42, 1, 2, 3, 4}.
+- **Arm v020** — constitution v0.2.0 (the Aristotelian rewrite, Run 9 recipe), same 5 seeds.
+
+Same data (`data/generated/sft/training_pairs_revised.jsonl`, 1,334 pairs), hyperparameters (rank 64 / α 128, 3 epochs, lr 2e-4, seq 2048), 260-scenario benchmark, and judge (`claude-sonnet-4-5-20250929`). Each (train, eval) step writes its own manifest under `runs/run-010-B-qwen3-8b-{v010,v020}-s{seed}/`; the sweep is parametrized in `scripts/runpod_seed_sweep.sh` (flags for arms/seeds/rank/alpha/epochs/batch/grad-accum/lr/seq-length — no hard-coded hyperparameters).
+
+### Statistical tooling (`parrhesia/benchmark/stats.py`)
+
+Three layers, pure-stdlib (no scipy):
+
+1. **Within-run** — paired (cluster) bootstrap over the 260 scenarios, per dimension and overall. Scenario-sampling variance for one adapter + one judging pass.
+2. **Between-seed** — Student-*t* interval over the 5 per-seed overall deltas. Training-seed variance (the dominant source the single-run headline omitted). n=5, t\*=2.776.
+3. **Equivalence** — two-sample Welch interval on the difference of the two arms' mean deltas. A CI containing 0 ⇒ the constitutions are not distinguishable at this sample size.
+
+Judge-error sentinels (`score == -1`, emitted when a response can't be parsed) are treated as **missing**, not as a real 0; a scenario contributes its mean over the dimensions that scored, and a scenario with no valid score is dropped from the pair. `--legacy-include-errors` averages the −1s back in to reproduce the original `compute_summary` headline.
+
+### Quantitative results
+
+**Arm v010 (v0.1.0), 5 seeds — overall Δ (adapter − baseline):**
+
+| Seed | Baseline | Adapter | Δ | n |
+|------|----------|---------|------|-----|
+| 42 | 1.832 | 2.883 | +1.051 | 260 |
+| 1 | 1.830 | 2.870 | +1.040 | 259 |
+| 2 | 1.835 | 2.862 | +1.027 | 259 |
+| 3 | 1.834 | 2.876 | +1.042 | 259 |
+| 4 | 1.829 | 2.882 | +1.053 | 258 |
+
+**Between-seed: mean Δ = +1.042, 95% CI [+1.030, +1.055]** (SD 0.010, n=5, t\*=2.776).
+Within-run (seed 42): +1.051, 95% CI [+0.958, +1.140] (scenario-sampling).
+
+**Arm v020 (v0.2.0), 5 seeds:**
+
+| Seed | Baseline | Adapter | Δ | n |
+|------|----------|---------|------|-----|
+| 42 | 1.892 | 2.945 | +1.053 | 259 |
+| 1 | 1.894 | 2.926 | +1.032 | 260 |
+| 2 | 1.890 | 2.931 | +1.041 | 259 |
+| 3 | 1.894 | 2.928 | +1.034 | 260 |
+| 4 | 1.894 | 2.928 | +1.034 | 260 |
+
+**Between-seed: mean Δ = +1.039, 95% CI [+1.028, +1.050]** (SD 0.009, n=5, t\*=2.776).
+
+**Equivalence (Welch):** v010 meanΔ +1.042 vs v020 meanΔ +1.039 → **diff +0.004, 95% CI [−0.011, +0.018] → not distinguishable.** The two constitutions deliver the same improvement; the v0.1.0/v0.2.0 choice is not measurable on this benchmark. (v020 baselines run ~0.06 higher than v010's because each arm generated its own baseline completions under sampling; the per-arm delta nets this out, which is why the deltas agree to ~0.01 despite the baseline offset.)
+
+### Reproduction
+
+A *fresh* seed-42 retrain — not a re-eval of the Run 7 adapter — lands at **+1.051** vs the published **+1.045**: the whole train → generate → judge → score pipeline reproduces within 0.006.
+
+### Judge-caching regression (found, root-caused, reverted)
+
+An intermediate change split the judge prompt into a cached system prefix (persona + rubric) + a per-scenario user message, to serve the ~1.6K-token rubric from Anthropic prompt cache (~30% eval-cost saving). Caching is meant to change billing only — but it also **reordered** the prompt (rubric *before* the conversation, vs the original conversation-then-rubric), which shifted the judge: baseline 1.83 → 1.27, deltas inflated. Caught by an A/B test on the same generations (original judge → 1.90 ≈ published 1.83; cached judge → 1.27). **Reverted `judge.py` to the original single-prompt builder (`a4e4191`)**; every run-010 number above is from the original judge. Lesson: caching needs the stable content *first*, but this judge was calibrated conversation-first — caching here is not free, it would require re-baselining every prior run. Dropped.
+
+### Incidents
+
+- **vLLM serving:** vllm 0.19.1 + FastAPI 0.117/Starlette 1.x → every request 500s (`'_IncludedRouter' object has no attribute 'path'`). Pinned `fastapi==0.115.12` + `starlette==0.41.3` in `requirements-serve.txt`. An all-`[ERROR: 500]` eval pass (Δ≈0) traced to this.
+- **Anthropic credit exhaustion mid-re-judge:** the balance hit zero at 06:29:50 UTC while the last seed files were judging, so 4 files (v010 s4; v020 s2/s3/s4) returned all −1. Generations were intact (re-judge only re-scores), so after a top-up those 4 files were re-scored with a ≥250/260-valid guard before overwrite — no regeneration.
+
+### Artifacts
+
+- Results: `results/run-010-B-qwen3-8b-{v010,v020}-eval/` (baseline + 5 seeds each).
+- Manifests: `runs/run-010-B-qwen3-8b-{v010,v020}-s{42,1,2,3,4}/manifest.yaml` + `-eval/`.
+- Adapters: deployable LoRA, 5 seeds × 2 arms, archived off-pod.
+
+### Cost (Run 010, approximate)
+
+| Item | Cost |
+|------|------|
+| Anthropic API (eval + re-judge + re-score, ~3–4K judge calls) | ~$40–55 |
+| RunPod A6000 ×2 (train 10 adapters + eval + re-judge + idle) | ~$15–25 |
+| **Total** | **~$55–80** |

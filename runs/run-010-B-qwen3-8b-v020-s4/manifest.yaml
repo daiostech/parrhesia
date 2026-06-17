@@ -1,0 +1,50 @@
+run_id: run-010-B-qwen3-8b-v020-s4
+approach: B
+base_model: Qwen/Qwen3-8B
+created_at: '2026-06-17T00:13:16.933081+00:00'
+git_sha: ''
+git_dirty: false
+description: Multi-seed CI sweep | arm v020 | seed 4 | data data/generated/sft-v020/training_pairs_revised.jsonl
+environment:
+  python: 3.11.10
+  pytorch: 2.10.0+cu128
+  cuda: '12.8'
+  gpu: NVIDIA RTX A6000
+  unsloth: 2026.6.7
+  peft: 0.19.1
+  trl: 0.24.0
+  transformers: 5.5.0
+  datasets: 4.3.0
+steps:
+- step_name: sft_training
+  command: python -m parrhesia.train.sft --model Qwen/Qwen3-8B --data data/generated/sft-v020/training_pairs_revised.jsonl
+    --output adapters/parrhesia-sft-v020-s4 --lora-r 64 --lora-alpha 128 --epochs 3 --batch-size 2 --grad-accum 16 --lr 0.0002
+    --max-seq-length 2048 --seed 4
+  completed_at: '2026-06-17T00:34:54.505582+00:00'
+  hyperparameters:
+    base_model: Qwen/Qwen3-8B
+    lora_r: 64
+    lora_alpha: 128
+    lora_dropout: 0.0
+    epochs: 3
+    batch_size: 2
+    gradient_accumulation_steps: 16
+    effective_batch_size: 32
+    learning_rate: 0.0002
+    max_seq_length: 2048
+    warmup_ratio: 0.05
+    optimizer: adamw_8bit
+    seed: 4
+  inputs:
+    sft_data: data/generated/sft-v020/training_pairs_revised.jsonl
+  outputs:
+    adapter: adapters/parrhesia-sft-v020-s4
+  hub_refs: {}
+  metrics:
+    training_examples: 1334
+    train_loss: 1.475142565038469
+    train_runtime: 1185.1545
+    train_samples_per_second: 3.377
+  notes: ''
+hub_datasets: {}
+hub_models: {}

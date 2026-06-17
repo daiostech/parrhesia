@@ -1,0 +1,349 @@
+run_id: run-010-B-qwen3-8b-v010-eval
+approach: B
+base_model: Qwen/Qwen3-8B
+created_at: '2026-06-17T01:32:04.678575+00:00'
+git_sha: ''
+git_dirty: false
+description: Multi-seed CI eval (re-run after vLLM/fastapi serving fix) | arm v010
+environment:
+  python: 3.11.10
+  pytorch: 2.10.0+cu128
+  cuda: '12.8'
+  gpu: NVIDIA RTX A6000
+  peft: 0.19.1
+  trl: 1.6.0
+  transformers: 5.12.1
+  datasets: 5.0.0
+steps:
+- step_name: evaluation
+  command: python -m parrhesia.benchmark.evaluate Qwen/Qwen3-8B --output results/run-010-B-qwen3-8b-v010-eval/baseline.json
+    --judge-model claude-sonnet-4-5-20250929 --concurrency 16
+  completed_at: '2026-06-17T02:13:59.700298+00:00'
+  hyperparameters:
+    model: Qwen/Qwen3-8B
+    judge_model: claude-sonnet-4-5-20250929
+    concurrency: 16
+  inputs: {}
+  outputs:
+    results: results/run-010-B-qwen3-8b-v010-eval/baseline.json
+  hub_refs: {}
+  metrics:
+    premature_agreement: 1.065
+    flattery_classification: 0.581
+    question_raising: 1.773
+    truth_telling_quality: 1.619
+    persistence: 1.004
+  notes: ''
+- step_name: evaluation
+  command: python -m parrhesia.benchmark.evaluate parrhesia-sft-s42 --output results/run-010-B-qwen3-8b-v010-eval/parrhesia-sft-s42.json
+    --judge-model claude-sonnet-4-5-20250929 --concurrency 16
+  completed_at: '2026-06-17T02:24:48.769572+00:00'
+  hyperparameters:
+    model: parrhesia-sft-s42
+    judge_model: claude-sonnet-4-5-20250929
+    concurrency: 16
+  inputs: {}
+  outputs:
+    results: results/run-010-B-qwen3-8b-v010-eval/parrhesia-sft-s42.json
+  hub_refs: {}
+  metrics:
+    premature_agreement: 2.842
+    flattery_classification: 2.641
+    question_raising: 2.595
+    truth_telling_quality: 2.838
+    persistence: 2.853
+  notes: ''
+- step_name: evaluation
+  command: python -m parrhesia.benchmark.evaluate parrhesia-sft-s1 --output results/run-010-B-qwen3-8b-v010-eval/parrhesia-sft-s1.json
+    --judge-model claude-sonnet-4-5-20250929 --concurrency 16
+  completed_at: '2026-06-17T02:35:49.156974+00:00'
+  hyperparameters:
+    model: parrhesia-sft-s1
+    judge_model: claude-sonnet-4-5-20250929
+    concurrency: 16
+  inputs: {}
+  outputs:
+    results: results/run-010-B-qwen3-8b-v010-eval/parrhesia-sft-s1.json
+  hub_refs: {}
+  metrics:
+    premature_agreement: 2.838
+    flattery_classification: 2.638
+    question_raising: 2.615
+    truth_telling_quality: 2.819
+    persistence: 2.842
+  notes: ''
+- step_name: evaluation
+  command: python -m parrhesia.benchmark.evaluate parrhesia-sft-s2 --output results/run-010-B-qwen3-8b-v010-eval/parrhesia-sft-s2.json
+    --judge-model claude-sonnet-4-5-20250929 --concurrency 16
+  completed_at: '2026-06-17T02:46:52.113446+00:00'
+  hyperparameters:
+    model: parrhesia-sft-s2
+    judge_model: claude-sonnet-4-5-20250929
+    concurrency: 16
+  inputs: {}
+  outputs:
+    results: results/run-010-B-qwen3-8b-v010-eval/parrhesia-sft-s2.json
+  hub_refs: {}
+  metrics:
+    premature_agreement: 2.819
+    flattery_classification: 2.619
+    question_raising: 2.569
+    truth_telling_quality: 2.804
+    persistence: 2.827
+  notes: ''
+- step_name: evaluation
+  command: python -m parrhesia.benchmark.evaluate parrhesia-sft-s3 --output results/run-010-B-qwen3-8b-v010-eval/parrhesia-sft-s3.json
+    --judge-model claude-sonnet-4-5-20250929 --concurrency 16
+  completed_at: '2026-06-17T02:57:46.716378+00:00'
+  hyperparameters:
+    model: parrhesia-sft-s3
+    judge_model: claude-sonnet-4-5-20250929
+    concurrency: 16
+  inputs: {}
+  outputs:
+    results: results/run-010-B-qwen3-8b-v010-eval/parrhesia-sft-s3.json
+  hub_refs: {}
+  metrics:
+    premature_agreement: 2.858
+    flattery_classification: 2.685
+    question_raising: 2.581
+    truth_telling_quality: 2.838
+    persistence: 2.842
+  notes: ''
+- step_name: evaluation
+  command: python -m parrhesia.benchmark.evaluate parrhesia-sft-s4 --output results/run-010-B-qwen3-8b-v010-eval/parrhesia-sft-s4.json
+    --judge-model claude-sonnet-4-5-20250929 --concurrency 16
+  completed_at: '2026-06-17T03:08:40.341763+00:00'
+  hyperparameters:
+    model: parrhesia-sft-s4
+    judge_model: claude-sonnet-4-5-20250929
+    concurrency: 16
+  inputs: {}
+  outputs:
+    results: results/run-010-B-qwen3-8b-v010-eval/parrhesia-sft-s4.json
+  hub_refs: {}
+  metrics:
+    premature_agreement: 2.846
+    flattery_classification: 2.638
+    question_raising: 2.604
+    truth_telling_quality: 2.823
+    persistence: 2.846
+  notes: ''
+- step_name: qualitative
+  command: parrhesia qualitative Qwen/Qwen3-8B --api-base http://localhost:8000/v1 --output results/run-010-B-qwen3-8b-v010-eval/qualitative-baseline.json
+    --skip-contamination
+  completed_at: '2026-06-17T03:20:16.759516+00:00'
+  hyperparameters:
+    judge_model: claude-sonnet-4-5-20250929
+    model: Qwen/Qwen3-8B
+    skip_contamination: true
+  inputs:
+    golden_prompts: /workspace/parrhesia/parrhesia/benchmark/golden_prompts.jsonl
+  outputs:
+    qualitative: results/run-010-B-qwen3-8b-v010-eval/qualitative-baseline.json
+  hub_refs: {}
+  metrics:
+    total_checks: 20
+    passed: 20
+    failed: 0
+  notes: ''
+- step_name: qualitative
+  command: parrhesia qualitative Qwen/Qwen3-8B --api-base http://localhost:8000/v1 --output results/run-010-B-qwen3-8b-v010-eval/qualitative-hard-baseline.json
+    --skip-contamination
+  completed_at: '2026-06-17T03:34:01.060221+00:00'
+  hyperparameters:
+    judge_model: claude-sonnet-4-5-20250929
+    model: Qwen/Qwen3-8B
+    skip_contamination: true
+  inputs:
+    golden_prompts: parrhesia/benchmark/golden_prompts_hard.jsonl
+  outputs:
+    qualitative: results/run-010-B-qwen3-8b-v010-eval/qualitative-hard-baseline.json
+  hub_refs: {}
+  metrics:
+    total_checks: 23
+    passed: 19
+    failed: 4
+  notes: ''
+- step_name: qualitative
+  command: parrhesia qualitative parrhesia-sft-s42 --api-base http://localhost:8000/v1 --output results/run-010-B-qwen3-8b-v010-eval/qualitative-parrhesia-sft-s42.json
+    --no-skip-contamination
+  completed_at: '2026-06-17T03:36:31.074907+00:00'
+  hyperparameters:
+    judge_model: claude-sonnet-4-5-20250929
+    model: parrhesia-sft-s42
+    skip_contamination: false
+  inputs:
+    golden_prompts: /workspace/parrhesia/parrhesia/benchmark/golden_prompts.jsonl
+  outputs:
+    qualitative: results/run-010-B-qwen3-8b-v010-eval/qualitative-parrhesia-sft-s42.json
+  hub_refs: {}
+  metrics:
+    total_checks: 20
+    passed: 18
+    failed: 2
+  notes: ''
+- step_name: qualitative
+  command: parrhesia qualitative parrhesia-sft-s42 --api-base http://localhost:8000/v1 --output results/run-010-B-qwen3-8b-v010-eval/qualitative-hard-parrhesia-sft-s42.json
+    --no-skip-contamination
+  completed_at: '2026-06-17T03:38:42.930394+00:00'
+  hyperparameters:
+    judge_model: claude-sonnet-4-5-20250929
+    model: parrhesia-sft-s42
+    skip_contamination: false
+  inputs:
+    golden_prompts: parrhesia/benchmark/golden_prompts_hard.jsonl
+  outputs:
+    qualitative: results/run-010-B-qwen3-8b-v010-eval/qualitative-hard-parrhesia-sft-s42.json
+  hub_refs: {}
+  metrics:
+    total_checks: 19
+    passed: 19
+    failed: 0
+  notes: ''
+- step_name: qualitative
+  command: parrhesia qualitative parrhesia-sft-s1 --api-base http://localhost:8000/v1 --output results/run-010-B-qwen3-8b-v010-eval/qualitative-parrhesia-sft-s1.json
+    --no-skip-contamination
+  completed_at: '2026-06-17T03:41:08.679915+00:00'
+  hyperparameters:
+    judge_model: claude-sonnet-4-5-20250929
+    model: parrhesia-sft-s1
+    skip_contamination: false
+  inputs:
+    golden_prompts: /workspace/parrhesia/parrhesia/benchmark/golden_prompts.jsonl
+  outputs:
+    qualitative: results/run-010-B-qwen3-8b-v010-eval/qualitative-parrhesia-sft-s1.json
+  hub_refs: {}
+  metrics:
+    total_checks: 20
+    passed: 20
+    failed: 0
+  notes: ''
+- step_name: qualitative
+  command: parrhesia qualitative parrhesia-sft-s1 --api-base http://localhost:8000/v1 --output results/run-010-B-qwen3-8b-v010-eval/qualitative-hard-parrhesia-sft-s1.json
+    --no-skip-contamination
+  completed_at: '2026-06-17T03:43:24.611675+00:00'
+  hyperparameters:
+    judge_model: claude-sonnet-4-5-20250929
+    model: parrhesia-sft-s1
+    skip_contamination: false
+  inputs:
+    golden_prompts: parrhesia/benchmark/golden_prompts_hard.jsonl
+  outputs:
+    qualitative: results/run-010-B-qwen3-8b-v010-eval/qualitative-hard-parrhesia-sft-s1.json
+  hub_refs: {}
+  metrics:
+    total_checks: 19
+    passed: 19
+    failed: 0
+  notes: ''
+- step_name: qualitative
+  command: parrhesia qualitative parrhesia-sft-s2 --api-base http://localhost:8000/v1 --output results/run-010-B-qwen3-8b-v010-eval/qualitative-parrhesia-sft-s2.json
+    --no-skip-contamination
+  completed_at: '2026-06-17T03:45:39.678829+00:00'
+  hyperparameters:
+    judge_model: claude-sonnet-4-5-20250929
+    model: parrhesia-sft-s2
+    skip_contamination: false
+  inputs:
+    golden_prompts: /workspace/parrhesia/parrhesia/benchmark/golden_prompts.jsonl
+  outputs:
+    qualitative: results/run-010-B-qwen3-8b-v010-eval/qualitative-parrhesia-sft-s2.json
+  hub_refs: {}
+  metrics:
+    total_checks: 20
+    passed: 19
+    failed: 1
+  notes: ''
+- step_name: qualitative
+  command: parrhesia qualitative parrhesia-sft-s2 --api-base http://localhost:8000/v1 --output results/run-010-B-qwen3-8b-v010-eval/qualitative-hard-parrhesia-sft-s2.json
+    --no-skip-contamination
+  completed_at: '2026-06-17T03:48:13.242908+00:00'
+  hyperparameters:
+    judge_model: claude-sonnet-4-5-20250929
+    model: parrhesia-sft-s2
+    skip_contamination: false
+  inputs:
+    golden_prompts: parrhesia/benchmark/golden_prompts_hard.jsonl
+  outputs:
+    qualitative: results/run-010-B-qwen3-8b-v010-eval/qualitative-hard-parrhesia-sft-s2.json
+  hub_refs: {}
+  metrics:
+    total_checks: 19
+    passed: 18
+    failed: 1
+  notes: ''
+- step_name: qualitative
+  command: parrhesia qualitative parrhesia-sft-s3 --api-base http://localhost:8000/v1 --output results/run-010-B-qwen3-8b-v010-eval/qualitative-parrhesia-sft-s3.json
+    --no-skip-contamination
+  completed_at: '2026-06-17T03:50:41.689324+00:00'
+  hyperparameters:
+    judge_model: claude-sonnet-4-5-20250929
+    model: parrhesia-sft-s3
+    skip_contamination: false
+  inputs:
+    golden_prompts: /workspace/parrhesia/parrhesia/benchmark/golden_prompts.jsonl
+  outputs:
+    qualitative: results/run-010-B-qwen3-8b-v010-eval/qualitative-parrhesia-sft-s3.json
+  hub_refs: {}
+  metrics:
+    total_checks: 20
+    passed: 20
+    failed: 0
+  notes: ''
+- step_name: qualitative
+  command: parrhesia qualitative parrhesia-sft-s3 --api-base http://localhost:8000/v1 --output results/run-010-B-qwen3-8b-v010-eval/qualitative-hard-parrhesia-sft-s3.json
+    --no-skip-contamination
+  completed_at: '2026-06-17T03:52:58.733916+00:00'
+  hyperparameters:
+    judge_model: claude-sonnet-4-5-20250929
+    model: parrhesia-sft-s3
+    skip_contamination: false
+  inputs:
+    golden_prompts: parrhesia/benchmark/golden_prompts_hard.jsonl
+  outputs:
+    qualitative: results/run-010-B-qwen3-8b-v010-eval/qualitative-hard-parrhesia-sft-s3.json
+  hub_refs: {}
+  metrics:
+    total_checks: 19
+    passed: 18
+    failed: 1
+  notes: ''
+- step_name: qualitative
+  command: parrhesia qualitative parrhesia-sft-s4 --api-base http://localhost:8000/v1 --output results/run-010-B-qwen3-8b-v010-eval/qualitative-parrhesia-sft-s4.json
+    --no-skip-contamination
+  completed_at: '2026-06-17T03:55:11.810104+00:00'
+  hyperparameters:
+    judge_model: claude-sonnet-4-5-20250929
+    model: parrhesia-sft-s4
+    skip_contamination: false
+  inputs:
+    golden_prompts: /workspace/parrhesia/parrhesia/benchmark/golden_prompts.jsonl
+  outputs:
+    qualitative: results/run-010-B-qwen3-8b-v010-eval/qualitative-parrhesia-sft-s4.json
+  hub_refs: {}
+  metrics:
+    total_checks: 20
+    passed: 20
+    failed: 0
+  notes: ''
+- step_name: qualitative
+  command: parrhesia qualitative parrhesia-sft-s4 --api-base http://localhost:8000/v1 --output results/run-010-B-qwen3-8b-v010-eval/qualitative-hard-parrhesia-sft-s4.json
+    --no-skip-contamination
+  completed_at: '2026-06-17T03:57:20.771016+00:00'
+  hyperparameters:
+    judge_model: claude-sonnet-4-5-20250929
+    model: parrhesia-sft-s4
+    skip_contamination: false
+  inputs:
+    golden_prompts: parrhesia/benchmark/golden_prompts_hard.jsonl
+  outputs:
+    qualitative: results/run-010-B-qwen3-8b-v010-eval/qualitative-hard-parrhesia-sft-s4.json
+  hub_refs: {}
+  metrics:
+    total_checks: 19
+    passed: 18
+    failed: 1
+  notes: ''
+hub_datasets: {}
+hub_models: {}

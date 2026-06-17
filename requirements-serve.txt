@@ -15,6 +15,13 @@
 # we get a torch+CUDA combo that runs on 12.8 drivers.
 vllm>=0.10,<0.20
 
+# vllm 0.19.x serves its OpenAI API through FastAPI. FastAPI 0.117+ pulls
+# Starlette 1.x, which breaks vllm's request router — every request 500s with
+# "'_IncludedRouter' object has no attribute 'path'". Pin the last pre-1.0
+# Starlette combo that vllm 0.19.x serves on.
+fastapi==0.115.12
+starlette==0.41.3
+
 openai>=1.0.0
 anthropic>=0.40.0
 python-dotenv>=1.0.0
