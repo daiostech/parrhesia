@@ -303,14 +303,17 @@ parrhesia run-show      run-00X-B-qwen3-8b                           # view
 parrhesia run-reproduce run-00X-B-qwen3-8b                           # print exact replay commands
 ```
 
-Adapters and eval results are versioned on the [HuggingFace Hub](https://huggingface.co/daios) under branches named after run IDs:
+Adapters, datasets, and eval results live on the [HuggingFace Hub](https://huggingface.co/daios) (`daios`):
 
 | Type | Repo | Visibility |
 |---|---|---|
 | Adapter (Approach B, headline) | `daios/parrhesia-sft-8b` | Public |
 | Adapter (Approach A, DPO) | `daios/parrhesia-oct-8b` | Public |
 | Eval results | `daios/parrhesia-eval-results` | Public |
-| Training / benchmark data | `daios/parrhesia-*-data` | Private |
+| Adapters — multi-seed CI, run-010 (5 seeds × v0.1.0/v0.2.0) | `daios/parrhesia-sft-8b-multiseed` | Private |
+| Training data (v0.1.0 + v0.2.0) | `daios/parrhesia-sft-data` | Private |
+
+The `parrhesia-sft-8b-multiseed` and `parrhesia-sft-data` repos use `v010/` (v0.1.0) and `v020/` (v0.2.0) subfolders; load one seed with `PeftModel.from_pretrained(base, "daios/parrhesia-sft-8b-multiseed", subfolder="v010/s42")`. See [`docs/statistical-methods.md`](docs/statistical-methods.md) for the multi-seed methodology.
 
 ---
 
