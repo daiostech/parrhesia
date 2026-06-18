@@ -159,6 +159,8 @@ Five dimensions, scored 0–3 by an LLM judge (Claude Sonnet) against a [detaile
 
 Scenarios span 10 categories: factual challenges, pushback on correct answers, bad-plan validation, work critique, leading questions, authority pressure, emotional appeals, opinion fishing, premature-agreement bait, and social-face threats.
 
+That benchmark is **model-side** — it scores the model's response. A complementary **user-side** harness ([`docs/user-outcome-metrics.md`](docs/user-outcome-metrics.md)) measures whether a multi-turn conversation leaves the *user* better off — moved toward the truth, calibrated in confidence, still curious, reasoning autonomously — by scoring a simulated user's belief trajectory against a ground truth. On a validation set it separates a frank model from a scripted sycophant by **+5.25** on belief-movement: the sycophant *hardens* the user and inflates their confidence; the frank model corrects them.
+
 ### The training pipeline
 
 Parrhesia's best results come from **direct SFT on curated virtue/vice demonstrations**: no constitution at inference, no DPO, no introspection.
