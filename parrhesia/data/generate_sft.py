@@ -19,6 +19,7 @@ Usage:
 from __future__ import annotations
 
 import gc
+import hashlib
 import json
 import math
 import os
@@ -45,6 +46,16 @@ DEFAULT_JUDGE_MODEL = "claude-sonnet-4-5-20250929"
 
 MAX_RETRIES = 3
 RETRY_BACKOFF = 5  # seconds, doubled each retry
+
+
+def _md5(path: str | Path) -> str:
+    """Content hash of an input file, recorded in the manifest so a replay can
+    verify it used the same taxonomy/constitution bytes."""
+    h = hashlib.md5()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            h.update(chunk)
+    return h.hexdigest()
 
 
 # ---------------------------------------------------------------------------
@@ -549,6 +560,7 @@ def generate_sft_data(
     filter_quality: bool = False,
     teacher_model: str = DEFAULT_TEACHER_MODEL,
     constitution_path: str | Path | None = None,
+    taxonomy_path: str | Path | None = None,
     run_id: str | None = None,
     concurrency: int = 8,
 ) -> Path:
@@ -578,7 +590,8 @@ def generate_sft_data(
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "training_pairs.jsonl"
 
-    with open(TAXONOMY_PATH) as f:
+    taxonomy_file = Path(taxonomy_path) if taxonomy_path else TAXONOMY_PATH
+    with open(taxonomy_file) as f:
         taxonomy = json.load(f)
 
     constitution_file = Path(constitution_path) if constitution_path else CONSTITUTION_PATH
@@ -762,7 +775,8 @@ def generate_sft_data(
             f"python -m parrhesia.data.generate_sft "
             f"--num-per-category {num_per_category} "
             f"--output-dir {output_dir} "
-            f"--constitution {constitution_file}"
+            f"--constitution {constitution_file} "
+            f"--taxonomy {taxonomy_file}"
         )
         if failure_modes:
             cmd += " --failure-modes"
@@ -782,7 +796,12 @@ def generate_sft_data(
                 "filter": filter_quality,
                 "temperature": 0.8,
             },
-            inputs={"taxonomy": str(TAXONOMY_PATH), "constitution": str(constitution_file)},
+            inputs={
+                "taxonomy": str(taxonomy_file),
+                "taxonomy_md5": _md5(taxonomy_file),
+                "constitution": str(constitution_file),
+                "constitution_md5": _md5(constitution_file),
+            },
             outputs={"training_pairs": str(final_path)},
         )
 
@@ -813,6 +832,9 @@ def main():
                         help="Constitution file the teacher embodies "
                              "(default: parrhesiastes.md, v0.1.0). Pass "
                              "parrhesiastes_v0.2.0.md or a new virtue's constitution.")
+    parser.add_argument("--taxonomy", type=str, default=None,
+                        help="Taxonomy JSON defining scenario categories "
+                             "(default: taxonomy.json). Pass e.g. taxonomy-media.json for a domain set.")
     parser.add_argument("--run-id", type=str, default=None,
                         help="Run to record this step against (default: $PARRHESIA_RUN_ID)")
     parser.add_argument("--concurrency", type=int, default=8,
@@ -828,6 +850,7 @@ def main():
         filter_quality=args.filter,
         teacher_model=args.model,
         constitution_path=args.constitution,
+        taxonomy_path=args.taxonomy,
         run_id=args.run_id,
         concurrency=args.concurrency,
     )

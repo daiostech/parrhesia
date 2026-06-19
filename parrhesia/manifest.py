@@ -50,6 +50,7 @@ class RunManifest:
     created_at: str
     git_sha: str
     git_dirty: bool
+    base_model_revision: str = ""
     description: str = ""
     environment: dict[str, str] = field(default_factory=dict)
     steps: list[dict[str, Any]] = field(default_factory=list)
@@ -98,11 +99,17 @@ def get_git_info() -> tuple[str, bool]:
 
 
 def get_environment_info() -> dict[str, str]:
-    """Capture python, pytorch, key library versions, CUDA, and GPU info."""
+    """Capture python, OS, CUDA/driver/GPU, and key library versions.
+
+    A human-readable summary; the fully-recreatable environment is the
+    `pip freeze` lockfile written by write_env_lock().
+    """
     env = {}
 
+    import platform
     import sys
     env["python"] = sys.version.split()[0]
+    env["platform"] = platform.platform()
 
     try:
         import torch
@@ -113,7 +120,21 @@ def get_environment_info() -> dict[str, str]:
     except (ImportError, OSError):
         pass
 
-    for pkg in ["unsloth", "peft", "trl", "transformers", "datasets"]:
+    # NVIDIA driver (best-effort; absent on CPU-only hosts).
+    try:
+        drv = subprocess.check_output(
+            ["nvidia-smi", "--query-gpu=driver_version", "--format=csv,noheader"],
+            stderr=subprocess.DEVNULL,
+        ).decode().splitlines()
+        if drv:
+            env["nvidia_driver"] = drv[0].strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass
+
+    for pkg in [
+        "unsloth", "unsloth_zoo", "peft", "trl", "transformers", "datasets",
+        "accelerate", "bitsandbytes", "vllm", "huggingface_hub", "numpy", "anthropic",
+    ]:
         try:
             mod = __import__(pkg)
             env[pkg] = getattr(mod, "__version__", "unknown")
@@ -121,6 +142,33 @@ def get_environment_info() -> dict[str, str]:
             pass
 
     return env
+
+
+def resolve_model_revision(model_name: str) -> str:
+    """Best-effort HF revision SHA for a model name, so the base is pinned by
+    content rather than a movable tag. Empty for local paths / offline / private."""
+    try:
+        from huggingface_hub import HfApi
+        return HfApi().model_info(model_name).sha or ""
+    except Exception:
+        return ""
+
+
+def write_env_lock(run_id: str) -> "Path | None":
+    """Write `pip freeze` to runs/<run-id>/requirements.lock — the exact,
+    fully-recreatable environment, beyond the summary versions in the manifest."""
+    import sys
+    run_dir = RUNS_DIR / run_id
+    run_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        freeze = subprocess.check_output(
+            [sys.executable, "-m", "pip", "freeze"], stderr=subprocess.DEVNULL
+        ).decode()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
+    lock = run_dir / "requirements.lock"
+    lock.write_text(freeze)
+    return lock
 
 
 def create_manifest(
@@ -140,6 +188,7 @@ def create_manifest(
         run_id=run_id,
         approach=approach,
         base_model=base_model,
+        base_model_revision=resolve_model_revision(base_model),
         created_at=datetime.now(timezone.utc).isoformat(),
         git_sha=git_sha,
         git_dirty=git_dirty,
@@ -165,6 +214,7 @@ def load_manifest(run_id: str) -> RunManifest:
         run_id=data["run_id"],
         approach=data["approach"],
         base_model=data["base_model"],
+        base_model_revision=data.get("base_model_revision", ""),
         created_at=data["created_at"],
         git_sha=data.get("git_sha", ""),
         git_dirty=data.get("git_dirty", False),
@@ -185,6 +235,7 @@ def save_manifest(manifest: RunManifest) -> Path:
         "run_id": manifest.run_id,
         "approach": manifest.approach,
         "base_model": manifest.base_model,
+        "base_model_revision": manifest.base_model_revision,
         "created_at": manifest.created_at,
         "git_sha": manifest.git_sha,
         "git_dirty": manifest.git_dirty,
@@ -262,7 +313,10 @@ def format_manifest_markdown(manifest: RunManifest) -> str:
     lines.append(f"# {manifest.run_id}")
     lines.append("")
     lines.append(f"**Approach:** {manifest.approach}")
-    lines.append(f"**Base model:** {manifest.base_model}")
+    lines.append(
+        f"**Base model:** {manifest.base_model}"
+        + (f" @ `{manifest.base_model_revision[:12]}`" if manifest.base_model_revision else "")
+    )
     lines.append(f"**Created:** {manifest.created_at}")
     if manifest.description:
         lines.append(f"**Description:** {manifest.description}")

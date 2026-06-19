@@ -305,6 +305,8 @@ parrhesia run-show      run-00X-B-qwen3-8b                           # view
 parrhesia run-reproduce run-00X-B-qwen3-8b                           # print exact replay commands
 ```
 
+What's pinned vs. reconstructed per run — and the honest limits of LLM/GPU reproducibility — is laid out in [`docs/reproducibility.md`](docs/reproducibility.md).
+
 Adapters, datasets, and eval results live on the [HuggingFace Hub](https://huggingface.co/daios) (`daios`):
 
 | Type | Repo | Visibility |
