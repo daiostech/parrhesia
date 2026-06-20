@@ -342,9 +342,10 @@ Adapters, datasets, and eval results live on the [HuggingFace Hub](https://huggi
 | Adapter (Approach A, DPO) | `daios/parrhesia-oct-8b` | Public |
 | Eval results | `daios/parrhesia-eval-results` | Public |
 | Adapters — multi-seed CI, run-010 (5 seeds × v0.1.0/v0.2.0) | `daios/parrhesia-sft-8b-multiseed` | Private |
-| Training data (v0.1.0 + v0.2.0) | `daios/parrhesia-sft-data` | Private |
+| Adapter — on-device, run-011 (Gemma-4-E4B, film/TV) | `daios/parrhesia-gemma4-media` | Private |
+| Training data (v0.1.0 + v0.2.0 + media) | `daios/parrhesia-sft-data` | Private |
 
-The `parrhesia-sft-8b-multiseed` and `parrhesia-sft-data` repos use `v010/` (v0.1.0) and `v020/` (v0.2.0) subfolders; load one seed with `PeftModel.from_pretrained(base, "daios/parrhesia-sft-8b-multiseed", subfolder="v010/s42")`. See [`docs/statistical-methods.md`](docs/statistical-methods.md) for the multi-seed methodology.
+The `parrhesia-sft-8b-multiseed` and `parrhesia-sft-data` repos use `v010/` (v0.1.0) and `v020/` (v0.2.0) subfolders (the data repo adds `media/` for the run-011 film/TV domain); load one seed with `PeftModel.from_pretrained(base, "daios/parrhesia-sft-8b-multiseed", subfolder="v010/s42")`. See [`docs/statistical-methods.md`](docs/statistical-methods.md) for the multi-seed methodology.
 
 ---
 
