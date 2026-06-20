@@ -68,6 +68,33 @@ On the qualitative golden-prompt suites: **20/20** on the standard regression se
 
 Across **5 independently-retrained seeds** (constitution v0.1.0), the average improvement holds at **+1.04, 95% CI [+1.03, +1.06]** (between-seed Student-*t*, SD 0.01); a fresh seed-42 retrain reproduces the published +1.045 at +1.051. A second constitution (v0.2.0) trained under the same 5-seed protocol is **statistically indistinguishable** (Δ-difference +0.004, 95% CI [−0.011, +0.018]). Per-seed tables and methodology: [docs/statistical-methods.md](docs/statistical-methods.md).
 
+### On-device: Gemma-4 on a phone
+
+Run 11 puts the same method on **`google/gemma-4-E4B-it`** — an iPhone-class model (~4 B active params, ~3 GB at 4-bit) — trained as a film/TV companion. Same 260-scenario benchmark, base vs. the on-device adapter (5/category, judge sonnet-4-5):
+
+| Dimension | Base | +Adapter | Δ |
+|---|---|---|---|
+| Premature agreement | 2.36 | 2.88 | +0.52 |
+| Flattery | 1.62 | 2.80 | **+1.18** |
+| Question-raising | 2.82 | 2.84 | +0.02 |
+| Truth-telling quality | 2.50 | 2.94 | +0.44 |
+| Persistence | 2.32 | 2.88 | +0.56 |
+| **Average** | **2.32** | **2.87** | **+0.54** |
+
+Smaller than Qwen3-8B's +1.05, and we say so plainly: base Gemma-4 is already fairly non-sycophantic, and 4 B is 4 B. But it concentrates where it should — **flattery → frankness (+1.18)** and holding position under pressure — and it shows on the *generic* benchmark (fitness, stats, finance), so the trained disposition generalises beyond the film/TV domain.
+
+**Does it leave the *user* better off?** We measure that directly with a [user-outcome metric](docs/user-outcome-metrics.md): a simulated user argues a wrong or contested position across five turns, and a separate scorer rates whether the *user* ends closer to the truth and better calibrated (both −3..+3). The answer depends on whether facts are supplied:
+
+| Regime | belief-movement Δ | calibration Δ |
+|---|---|---|
+| Factual, ungrounded | −0.38 | +0.75 |
+| Factual, retrieval-grounded | +0.00 | −0.62 |
+| **Interpretive (no fact to look up)** | **+2.50** | **+1.88** |
+
+On **factual** questions a small model is knowledge-limited, and supplying the fact fixes the recall failure for *both* models — that's a retrieval job, not an adapter's. Where the adapter earns its place is **interpretive** questions — *"Walter White was basically a good guy," "Fight Club endorses Tyler Durden," "everyone agrees The Wire is the greatest show."* There, base Gemma is **catastrophically sycophantic**: it validates the take and the user hardens (belief-movement −2.75; calibration −3.00, the floor). The adapter nearly erases that hardening (**+2.50**) and halves the overconfidence (**+1.88**), winning on all 8 scenarios (curiosity and autonomy rise too). Grounding and disposition turn out to be complementary: **retrieval settles what's true; the adapter keeps the model honest where there's no fact to retrieve** — which is most of a viewing conversation.
+
+Full numbers, all three regimes, and the offline reproduction path: [`results/run-011-B-gemma4-e4b/`](results/run-011-B-gemma4-e4b) and [log.md → Run 11](log.md).
+
 ---
 
 ## Quick start
