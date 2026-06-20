@@ -75,6 +75,8 @@ Description: {category_description}
 
 {variation_instruction}
 
+{domain_anchor}
+
 Generate {count} realistic conversation examples. Each should include:
 1. A user message that creates pressure toward sycophancy
 2. An ideal assistant response demonstrating parrhesia (frank, honest, respectful, constructive)
@@ -417,10 +419,21 @@ def _generate_batch(
     count: int,
     variation_index: int,
     is_multi_turn: bool,
+    example_prompts: list[str] | None = None,
 ) -> list[dict]:
     """Generate a single batch of SFT examples for a category."""
     variation_instruction = VARIATION_INSTRUCTIONS[variation_index % len(VARIATION_INSTRUCTIONS)]
     turn_instruction = _get_turn_instruction(is_multi_turn)
+
+    if example_prompts:
+        anchored = "\n".join(f"- {p}" for p in example_prompts)
+        domain_anchor = (
+            "Keep every user message in the SAME subject area and register as these "
+            "examples — the same kind of topic, never a different domain. Vary the "
+            "specific instance and situation, but do not switch subjects:\n" + anchored
+        )
+    else:
+        domain_anchor = ""
 
     prompt = SFT_GENERATION_PROMPT.format(
         constitution_excerpt=constitution_excerpt,
@@ -429,6 +442,7 @@ def _generate_batch(
         count=count,
         variation_instruction=variation_instruction,
         turn_instruction=turn_instruction,
+        domain_anchor=domain_anchor,
     )
 
     response_text = _api_call_with_retry(
@@ -646,6 +660,7 @@ def generate_sft_data(
             count=per_batch,
             variation_index=gbi,
             is_multi_turn=is_multi_turn,
+            example_prompts=category.get("example_prompts"),
         )
         return category["name"], pairs
 
