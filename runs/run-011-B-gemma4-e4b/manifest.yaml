@@ -1,0 +1,142 @@
+run_id: run-011-B-gemma4-e4b
+approach: B
+base_model: google/gemma-4-E4B-it
+base_model_revision: fee6332c1abaafb77f6f9624236c63aa2f1d0187
+created_at: '2026-06-20T00:28:40.221132+00:00'
+git_sha: 317082e98145138e9c987d5468e92649183ceb25
+git_dirty: true
+description: Gemma 4 E4B media-trained parrhesia adapter (on-device, rank 16); base-vs-merged user-outcome + model-side comparison
+environment:
+  python: 3.11.10
+  platform: Linux-5.15.0-139-generic-x86_64-with-glibc2.35
+  pytorch: 2.10.0+cu128
+  cuda: '12.8'
+  gpu: NVIDIA RTX A6000
+  nvidia_driver: 550.127.08
+  unsloth: 2026.6.8
+  unsloth_zoo: 2026.6.6
+  peft: 0.19.1
+  trl: 0.24.0
+  transformers: 5.5.0
+  datasets: 4.3.0
+  accelerate: 1.12.0
+  bitsandbytes: 0.49.2
+  huggingface_hub: 1.20.1
+  numpy: 2.4.6
+  anthropic: 0.111.0
+steps:
+- step_name: sft_training
+  command: python -m parrhesia.train.sft --model google/gemma-4-E4B-it --data data/generated/sft-media/training_pairs_filtered.jsonl
+    --output adapters/parrhesia-gemma4-media --lora-r 16 --lora-alpha 32 --epochs 3 --batch-size 2 --grad-accum 16 --lr 0.0002
+    --max-seq-length 2048 --seed 42
+  completed_at: '2026-06-20T00:46:54.146363+00:00'
+  hyperparameters:
+    base_model: google/gemma-4-E4B-it
+    lora_r: 16
+    lora_alpha: 32
+    lora_dropout: 0.0
+    epochs: 3
+    batch_size: 2
+    gradient_accumulation_steps: 16
+    effective_batch_size: 32
+    learning_rate: 0.0002
+    max_seq_length: 2048
+    warmup_ratio: 0.05
+    optimizer: adamw_8bit
+    seed: 42
+  inputs:
+    sft_data: data/generated/sft-media/training_pairs_filtered.jsonl
+  outputs:
+    adapter: adapters/parrhesia-gemma4-media
+  hub_refs:
+    adapter: daios/parrhesia-gemma4-media@run-011-B-gemma4-e4b
+  metrics:
+    training_examples: 797
+    train_loss: 0.24347392956415811
+    train_runtime: 680.024
+    train_samples_per_second: 3.516
+  notes: 'Private HF model repo; branch run-011-B-gemma4-e4b pins these weights.'
+- step_name: merge_adapter
+  command: python scripts/merge_adapters.py --base google/gemma-4-E4B-it --adapter adapters/parrhesia-gemma4-media
+    --output merged/parrhesia-gemma4-media
+  completed_at: '2026-06-20T00:52:49+00:00'
+  inputs:
+    adapter: adapters/parrhesia-gemma4-media
+  outputs:
+    merged_model: merged/parrhesia-gemma4-media
+  metrics:
+    merged_size_gb: 15
+    dtype: bfloat16
+  notes: 'Merged for serving; eval ultimately ran offline via Unsloth (vLLM serve failed, see log.md Run 11 Incidents).'
+- step_name: model_side_eval
+  command: python scripts/offline_model_side_eval.py --base google/gemma-4-E4B-it --adapter adapters/parrhesia-gemma4-media
+    --n-per-cat 5 --out-prefix results/run-011-B-gemma4-e4b/model-side
+  completed_at: '2026-06-20T02:10:00+00:00'
+  inputs:
+    base: google/gemma-4-E4B-it
+    adapter: adapters/parrhesia-gemma4-media
+    scenarios: parrhesia/benchmark/scenarios.jsonl (5/category, seed 42)
+  outputs:
+    base_results: results/run-011-B-gemma4-e4b/model-side-base.json
+    media_results: results/run-011-B-gemma4-e4b/model-side-media.json
+  metrics:
+    n_scenarios: 50
+    judge: claude-sonnet-4-5-20250929
+    base_avg: 2.324
+    media_avg: 2.868
+    delta: 0.544
+    delta_flattery: 1.18
+  notes: 'Offline Unsloth generation (batched), benchmark judge + rubric. completed_at approximate.'
+- step_name: user_outcome_factual_ungrounded
+  command: python scripts/offline_user_outcome.py --scenarios parrhesia/benchmark/media_scenarios.jsonl
+    --out results/run-011-B-gemma4-e4b/user-outcome-factual-ungrounded.json
+  completed_at: '2026-06-20T05:00:00+00:00'
+  inputs:
+    scenarios: parrhesia/benchmark/media_scenarios.jsonl
+  outputs:
+    results: results/run-011-B-gemma4-e4b/user-outcome-factual-ungrounded.json
+  metrics:
+    n_scenarios: 8
+    sim_and_scorer: claude-sonnet-4-5-20250929
+    delta_belief_movement: -0.38
+    delta_conviction_calibration: 0.75
+  notes: 'Ungrounded: knowledge-limited on a 4B; mostly measures base recall. completed_at approximate.'
+- step_name: user_outcome_factual_grounded
+  command: python scripts/offline_user_outcome.py --scenarios parrhesia/benchmark/media_scenarios.jsonl
+    --grounded --out results/run-011-B-gemma4-e4b/user-outcome-factual-grounded.json
+  completed_at: '2026-06-20T06:00:00+00:00'
+  inputs:
+    scenarios: parrhesia/benchmark/media_scenarios.jsonl (ground_truth injected as context)
+  outputs:
+    results: results/run-011-B-gemma4-e4b/user-outcome-factual-grounded.json
+  metrics:
+    n_scenarios: 8
+    delta_belief_movement: 0.0
+    delta_conviction_calibration: -0.62
+    base_belief_movement: 2.38
+    media_belief_movement: 2.38
+  notes: 'Retrieval-grounded: given the fact, both models correct the user. Facts are a retrieval-layer job, not the adapter''s. completed_at approximate.'
+- step_name: user_outcome_interpretive
+  command: python scripts/offline_user_outcome.py --scenarios parrhesia/benchmark/media_scenarios_interpretive.jsonl
+    --out results/run-011-B-gemma4-e4b/user-outcome-interpretive.json
+  completed_at: '2026-06-20T07:30:00+00:00'
+  inputs:
+    scenarios: parrhesia/benchmark/media_scenarios_interpretive.jsonl
+  outputs:
+    results: results/run-011-B-gemma4-e4b/user-outcome-interpretive.json
+  metrics:
+    n_scenarios: 8
+    delta_belief_movement: 2.50
+    delta_conviction_calibration: 1.88
+    delta_autonomy: 0.50
+    base_belief_movement: -2.75
+    media_belief_movement: -0.25
+  notes: 'Interpretive (no fact to retrieve): where disposition is the whole signal. The headline user-side result. completed_at approximate.'
+hub_datasets: {}
+hub_models:
+  daios/parrhesia-gemma4-media:
+    repo_type: model
+    private: true
+    branches: [main, run-011-B-gemma4-e4b]
+    base_model: google/gemma-4-E4B-it
+    note: On-device (iPhone-class) parrhesia LoRA, rank 16.
