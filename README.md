@@ -355,7 +355,7 @@ bash scripts/runpod_eval.sh --run-id run-00X-B-qwen3-8b --base-model Qwen/Qwen3-
 | ✅ Shipped | Foundation | Three-approach study (character training vs. direct SFT vs. DPO triplets) |
 | ✅ Shipped | Validation | Statistical rigor: 5 retrained seeds per arm, **+1.04 [+1.03, +1.06]**, plus a v0.1.0/v0.2.0 equivalence test (Run 10) |
 | ✅ Shipped | Validation | Cross-architecture: **Gemma-4-E4B**, iPhone-class, **+0.54** avg with the gain concentrated in flattery (Run 11) |
-| ✅ Shipped | Virtues | Pipeline transfer to a second virtue — **justice (*dikaiosynē*)**, as a candidate for AI control and security. Results not yet published |
+| ✅ Shipped | Virtues | Second virtue trained with the same pipeline — **justice (*dikaiosynē*)**, against compartmentalized harm in multi-agent systems, as a candidate for AI control and security. Preprint, July 2026 |
 | 🔜 Next | Validation | External benchmarks: SycEval, Beacon, ELEPHANT — the results so far exist only on our own instrument |
 | 🔜 Next | Validation | Judge validity: a cross-family judge plus human agreement statistics. Scoring a Claude-generated corpus with a Claude judge is a circularity we have not resolved |
 | 🔜 Next | Validation | Novel-domain generalization: legal advice, medical second opinions, technical code review. Does trained judgment hold outside the 10 scenario categories, or collapse into a new form of pattern-matching? |
