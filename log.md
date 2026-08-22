@@ -11,6 +11,10 @@
 | run-005-B-qwen3-8b | B (Direct SFT) | Qwen3-8B | Complete | [manifest](runs/run-005-B-qwen3-8b/manifest.yaml) |
 | run-006-B-qwen3-8b | B (Phronesis revision) | Qwen3-8B | Complete + baseline re-eval (2026-04-30) | [manifest](runs/run-006-B-qwen3-8b/manifest.yaml) |
 | run-007-B-qwen3-8b | B (Expanded phronesis) | Qwen3-8B | Complete + baseline re-eval (2026-04-30) | [manifest](runs/run-007-B-qwen3-8b/manifest.yaml) |
+| run-008-A-qwen3-8b | A (Introspection on Run 7 SFT) | Qwen3-8B | Created, never run (`steps: []`) — no log section | [manifest](runs/run-008-A-qwen3-8b/manifest.yaml) |
+| run-009-B-qwen3-8b | B (v0.2.0 constitution rerun) | Qwen3-8B | Complete — on par with Run 7, not better | [manifest](runs/run-009-B-qwen3-8b/manifest.yaml) |
+| run-010-B-qwen3-8b | B (Multi-seed CIs + v0.1.0/v0.2.0 equivalence) | Qwen3-8B | Complete — 2 arms × 5 seeds, +1.04 [+1.03, +1.06] | [v010 eval](runs/run-010-B-qwen3-8b-v010-eval/manifest.yaml) · [v020 eval](runs/run-010-B-qwen3-8b-v020-eval/manifest.yaml) |
+| run-011-B-gemma4-e4b | B (On-device, media domain) | Gemma-4-E4B | Complete — +0.54 avg, plus user-outcome metric | [manifest](runs/run-011-B-gemma4-e4b/manifest.yaml) |
 
 > **Note:** Runs 6 and 7 originally evaluated baseline hard-qual under a contamination-check bug
 > (the LLM contamination filter was applied to the untrained baseline as well as the SFT,
