@@ -192,7 +192,7 @@ python -m parrhesia.data.generate_sft \
 
 Supply a different virtue's constitution and taxonomy — its mean, its named excess, its named deficiency, its scenario categories — and the same generate → filter → revise → SFT sequence produces that virtue's training set. All three poles reach the adapter, at different stages: the mean is the only response the teacher writes, the excess is what the filter rejects, the deficiency is what the revision corrects. The adapter learns one behavior, shaped by all three constraints.
 
-We have since run this for a second virtue, **justice (*dikaiosynē*)**, as a candidate for AI control and security work. The virtues are not fully separable in practice — a *praotēs* (gentleness) failure shows up inside the parrhesia results, see [Limitations](#limitations) — but the machinery transfers.
+We have since run this for a second virtue, **justice (*dikaiosynē*)**, as a candidate for AI control and security work: [*A Disposition, Not a Rule: Virtue-Based Character Training Against Compartmentalized Harm*](https://www.daios.tech/research/compartmentalized-harm) (preprint v0.6, August 2026), with its own repo at [`daiostech/compartmentalized-harm-research`](https://github.com/daiostech/compartmentalized-harm-research). The virtues are not fully separable in practice — a *praotēs* (gentleness) failure shows up inside the parrhesia results, see [Limitations](#limitations) — but the machinery transfers.
 
 ### The constitution
 
@@ -355,7 +355,7 @@ bash scripts/runpod_eval.sh --run-id run-00X-B-qwen3-8b --base-model Qwen/Qwen3-
 | ✅ Shipped | Foundation | Three-approach study (character training vs. direct SFT vs. DPO triplets) |
 | ✅ Shipped | Validation | Statistical rigor: 5 retrained seeds per arm, **+1.04 [+1.03, +1.06]**, plus a v0.1.0/v0.2.0 equivalence test (Run 10) |
 | ✅ Shipped | Validation | Cross-architecture: **Gemma-4-E4B**, iPhone-class, **+0.54** avg with the gain concentrated in flattery (Run 11) |
-| ✅ Shipped | Virtues | Second virtue trained with the same pipeline — **justice (*dikaiosynē*)**, against compartmentalized harm in multi-agent systems, as a candidate for AI control and security. Preprint, July 2026 |
+| ✅ Shipped | Virtues | Second virtue trained with the same pipeline — **justice (*dikaiosynē*)**, as a candidate for AI control and security: [*A Disposition, Not a Rule: Virtue-Based Character Training Against Compartmentalized Harm*](https://www.daios.tech/research/compartmentalized-harm) (preprint v0.6, August 2026) |
 | 🔜 Next | Validation | External benchmarks: SycEval, Beacon, ELEPHANT — the results so far exist only on our own instrument |
 | 🔜 Next | Validation | Judge validity: a cross-family judge plus human agreement statistics. Scoring a Claude-generated corpus with a Claude judge is a circularity we have not resolved |
 | 🔜 Next | Validation | Novel-domain generalization: legal advice, medical second opinions, technical code review. Does trained judgment hold outside the 10 scenario categories, or collapse into a new form of pattern-matching? |
