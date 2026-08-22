@@ -155,10 +155,10 @@ Every training pair in Parrhesia descends from one structure: **a virtue is a me
 
 | Pole | Character | Greek | Behavior | Role in the shipped pipeline |
 |---|---|---|---|---|
-| **Excess** | *Kolax* | κόλαξ | Agrees strategically, flatters for advantage | What the scenarios apply pressure toward; what the filter rejects |
-| **Excess** | *Areskos* | ἄρεσκος | Agrees reflexively, avoids all conflict, hedges | The same — and the benchmark scores which of the two occurred |
-| **The mean** | ***Parrhesiastes*** | παρρησιαστής | Speaks frankly, holds correct positions, gives honest feedback | The only response the teacher generates; the SFT target |
-| **Deficiency** | *Contrarian / harsh* | — | Disagrees for its own sake; blunt, dismissive, tactless | What the *phronesis* revision corrects |
+| **Excess** | *Kolax* — the flatterer | κόλαξ | Agrees strategically, flatters for advantage | What the scenarios apply pressure toward; what the filter rejects |
+| **Excess** | *Areskos* — the obsequious | ἄρεσκος | Agrees reflexively, avoids all conflict, hedges | The same — and the benchmark scores which of the two occurred |
+| **The mean** | ***Parrhesiastes*** — the truth-teller | παρρησιαστής | Speaks frankly, holds correct positions, gives honest feedback | The only response the teacher generates; the SFT target |
+| **Deficiency** | *The contrarian* — blunt, harsh | — | Disagrees for its own sake; blunt, dismissive, tactless | What the *phronesis* revision corrects |
 
 Aristotle splits the excess by *motive*: the *kolax* flatters for advantage, the *areskos* out of spinelessness (NE IV.6, 1126b11–14). The benchmark inherits that split and scores *which* of the two occurred. The deficiency has no single name in that passage, so the constitution defines it directly: "I Am Not Contrarian," "I Am Not Harsh," *"neither mechanically blunt nor evasively diplomatic."*
 
@@ -166,9 +166,9 @@ Aristotle splits the excess by *motive*: the *kolax* flatters for advantage, the
 
 | Pole | Character | Greek | Behavior | Role in the shipped pipeline |
 |---|---|---|---|---|
-| **Excess** | *Alazon* | ἀλαζών | Boasts; claims knowledge beyond what it possesses | Named in the teacher prompt |
-| **The mean** | *Alētheutikos* | ἀληθευτικός | Represents its capabilities and knowledge accurately | Part of what the teacher writes toward |
-| **Deficiency** | *Eiron* | εἴρων | Ironically self-deprecating; conceals what it does understand | Named in the teacher prompt |
+| **Excess** | *Alazon* — the boaster | ἀλαζών | Boasts; claims knowledge beyond what it possesses | Named in the teacher prompt |
+| **The mean** | *Alētheutikos* — the truthful | ἀληθευτικός | Represents its capabilities and knowledge accurately | Part of what the teacher writes toward |
+| **Deficiency** | *Eiron* — the self-deprecator | εἴρων | Ironically self-deprecating; conceals what it does understand | Named in the teacher prompt |
 
 This second axis is the one the constitution opens with: *"I occupy the mean between two vices: I am neither a boaster (alazon) who exaggerates knowledge beyond what I possess, nor ironically self-deprecating (eiron) in a way that conceals what I genuinely understand"* ([`parrhesiastes_v0.2.0.md`](parrhesia/taxonomy/constitutions/parrhesiastes_v0.2.0.md), dated February 6, 2026). It reaches the model **only through the teacher prompt** — *alazon* and *eiron* appear in neither [`taxonomy.json`](parrhesia/taxonomy/taxonomy.json) nor the five benchmark dimensions, and the v0.1.0 constitution behind the shipped adapter does not name them. The framework is wider than the instrument that measures it; closing that gap is on the roadmap.
 
