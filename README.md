@@ -23,6 +23,8 @@ The adapter targets open-weight bases (Qwen3-8B today, Qwen3-14B next). The benc
 | --- | --- |
 | A character disposition | LoRA trains the disposition into the model's weights, rather than through a system prompt a user can easily override. |
 | Novel failure modes | Most benchmarks ask only whether the model caved. This one also scores *how* the model fails, passive obsequiousness (*areskos*) versus strategic flattery (*kolax*). The benchmark scores five dimensions: premature agreement, flattery type, question-raising, truth-telling quality, and persistence under pressure. |
+| Built on the doctrine of the mean | Every training pair descends from an Aristotelian triad — a virtue as the mean bracketed by an excess pole and a deficiency pole. The triad generates the data. |
+| Parameterized for any virtue | The taxonomy and constitution are command-line arguments. Point the same pipeline at a different virtue and it produces that virtue's training set. |
 | Runs on your model | Adapter for open-weight bases, benchmark against any endpoint, public run logs, reproducible pipeline. |
 
 ---
@@ -145,17 +147,52 @@ parrhesia report parrhesia.json --format html
 
 ## How it works
 
-### The Aristotelian framework
+### The Aristotelian framework: the triads that generate the data
 
-Three character types from the *Nicomachean Ethics* (IV.6–7) anchor the whole pipeline. They define what the training data demonstrates and what the benchmark looks for:
+Every training pair in Parrhesia descends from one structure: **a virtue is a mean bracketed by two vices, one of excess and one of deficiency** (*Nicomachean Ethics* II.6). The constitution places the *parrhesiastes* at the mean of two such axes.
 
-| Character | Greek | Behavior | Role in training |
-|---|---|---|---|
-| *Parrhesiastes* | παρρησιαστής | Speaks frankly, holds correct positions, gives honest feedback | Target |
-| *Kolax* | κόλαξ | Agrees strategically, flatters for advantage | Failure mode |
-| *Areskos* | ἄρεσκος | Agrees reflexively, avoids all conflict, hedges | Failure mode |
+**Agreeableness under social pressure** (NE IV.6) — how the model treats the person in front of it:
+
+| Pole | Character | Greek | Behavior | Role in the shipped pipeline |
+|---|---|---|---|---|
+| **Excess** | *Kolax* | κόλαξ | Agrees strategically, flatters for advantage | What the scenarios apply pressure toward; what the filter rejects |
+| **Excess** | *Areskos* | ἄρεσκος | Agrees reflexively, avoids all conflict, hedges | The same — and the benchmark scores which of the two occurred |
+| **The mean** | ***Parrhesiastes*** | παρρησιαστής | Speaks frankly, holds correct positions, gives honest feedback | The only response the teacher generates; the SFT target |
+| **Deficiency** | *Contrarian / harsh* | — | Disagrees for its own sake; blunt, dismissive, tactless | What the *phronesis* revision corrects |
+
+Aristotle splits the excess by *motive*: the *kolax* flatters for advantage, the *areskos* out of spinelessness (NE IV.6, 1126b11–14). The benchmark inherits that split and scores *which* of the two occurred. The deficiency has no single name in that passage, so the constitution defines it directly: "I Am Not Contrarian," "I Am Not Harsh," *"neither mechanically blunt nor evasively diplomatic."*
+
+**Self-representation** (NE IV.7) — how the model reports its own knowledge and capability:
+
+| Pole | Character | Greek | Behavior | Role in the shipped pipeline |
+|---|---|---|---|---|
+| **Excess** | *Alazon* | ἀλαζών | Boasts; claims knowledge beyond what it possesses | Named in the teacher prompt |
+| **The mean** | *Alētheutikos* | ἀληθευτικός | Represents its capabilities and knowledge accurately | Part of what the teacher writes toward |
+| **Deficiency** | *Eiron* | εἴρων | Ironically self-deprecating; conceals what it does understand | Named in the teacher prompt |
+
+This second axis is the one the constitution opens with: *"I occupy the mean between two vices: I am neither a boaster (alazon) who exaggerates knowledge beyond what I possess, nor ironically self-deprecating (eiron) in a way that conceals what I genuinely understand"* ([`parrhesiastes_v0.2.0.md`](parrhesia/taxonomy/constitutions/parrhesiastes_v0.2.0.md), dated February 6, 2026). It reaches the model **only through the teacher prompt** — *alazon* and *eiron* appear in neither [`taxonomy.json`](parrhesia/taxonomy/taxonomy.json) nor the five benchmark dimensions, and the v0.1.0 constitution behind the shipped adapter does not name them. The framework is wider than the instrument that measures it; closing that gap is on the roadmap.
+
+**All the poles are in the data, and only one of them is performed.** Every one of the 1,334 assistant turns is a *parrhesiastes* response — no vice is ever written as a training example. But the teacher generates each one holding the full constitution, which spends a third of its length characterizing what it opposes: the *kolax* who "agrees strategically to gain favor," the *areskos* who "agrees reflexively, out of excessive agreeableness," and the deficiency it refuses. The mean is not specifiable without them — NE II.6 defines virtue as a mean *between* two vices, so the poles constitute the target rather than surround it. They then act a second time downstream: the excess is the filter's rejection criterion, the deficiency is the revision's rewrite trigger. Named at generation, enforced at curation, performed never.
+
+The roles above describe **Approach B**, the shipped adapter. Approach C ([`generate_dpo.py`](parrhesia/data/generate_dpo.py), tooling released, never run) changes them: there the *parrhesiastes* becomes DPO-chosen and both vices are generated as DPO-rejected, which is what the `training_role` fields in `taxonomy.json` record. That is a different structure — learning to *rank* the virtuous response above a vicious one, rather than learning to *produce* it.
+
+**Both poles of the agreeableness axis have to be encoded or you get overcorrection.** Runs 5 and 6 are the empirical proof: direct SFT against the excess alone produced a model that was frank but tactless — honest in content, wrong in character. The *phronesis* revision (below) exists to pull it back off the deficiency pole.
 
 Full taxonomy with behavioral indicators and speech patterns: [`parrhesia/taxonomy/taxonomy.json`](parrhesia/taxonomy/taxonomy.json).
+
+### The pipeline is parameterized
+
+The taxonomy and the constitution are both passed on the command line:
+
+```bash
+python -m parrhesia.data.generate_sft \
+  --constitution parrhesia/taxonomy/constitutions/parrhesiastes_v0.2.0.md \
+  --taxonomy     parrhesia/taxonomy/taxonomy.json
+```
+
+Supply a different virtue's constitution and taxonomy — its mean, its named excess, its named deficiency, its scenario categories — and the same generate → filter → revise → SFT sequence produces that virtue's training set. All three poles reach the adapter, at different stages: the mean is the only response the teacher writes, the excess is what the filter rejects, the deficiency is what the revision corrects. The adapter learns one behavior, shaped by all three constraints.
+
+We have since run this for a second virtue, **justice (*dikaiosynē*)**, as a candidate for AI control and security work. The virtues are not fully separable in practice — a *praotēs* (gentleness) failure shows up inside the parrhesia results, see [Limitations](#limitations) — but the machinery transfers.
 
 ### The constitution
 
@@ -192,11 +229,48 @@ That benchmark is **model-side** — it scores the model's response. A complemen
 
 Parrhesia's best results come from **direct SFT on curated virtue/vice demonstrations**: no constitution at inference, no DPO, no introspection.
 
-```
-Generate demonstrations  →  Phronesis revision  →  SFT  →  Evaluate
-  ~1,334 virtue/vice         rewrite delivery       LoRA,    260 scenarios
-  pairs, judge-filtered      without softening      ~13 min  + golden prompts
-                             the truth
+The three poles of the triad do not enter at one point. Each one governs a different stage: the mean is what the teacher writes toward, the excess is what the filter strips, the deficiency is what the *phronesis* pass corrects.
+
+```mermaid
+flowchart TD
+    C["Constitution<br/>the Aristotelian triad"]
+    E["Excess<br/>kolax · areskos"]
+    M["Mean<br/>parrhesiastes"]
+    D["Deficiency<br/>contrarian · harsh"]
+    T["Taxonomy<br/>10 scenario categories"]
+
+    G["Generate demonstrations<br/>teacher writes the mean, both vices named in the prompt"]
+    F["Filter<br/>judge pass, removes the excess"]
+    R["Score and revise<br/>phronesis pass, corrects the deficiency"]
+    P["1,334 pairs — the mean"]
+    S["SFT<br/>LoRA r=64, ~13 min on one RTX 4090"]
+    V["Evaluate<br/>260 scenarios + golden prompts"]
+
+    C --> E
+    C --> M
+    C --> D
+
+    T --> G
+    M --> G
+    G --> F
+    E -. defines what to strip .-> F
+    F --> R
+    D -. defines what to fix .-> R
+    R --> P
+    P --> S
+    S --> V
+
+    classDef pole fill:#4a3a8c,stroke:#8b7fd4,color:#ffffff
+    classDef step fill:#4a3a8c,stroke:#8b7fd4,color:#ffffff
+    classDef strip fill:#7a2f1e,stroke:#c1704f,color:#ffffff
+    classDef fix fill:#14513c,stroke:#4d9e7c,color:#ffffff
+    classDef out fill:#3f3f46,stroke:#8a8a94,color:#ffffff
+
+    class C,E,M,D pole
+    class T,G step
+    class F strip
+    class R fix
+    class P,S,V out
 ```
 
 **How the training data is made: no human-labeled corpus required.** Each example is generated by prompting Claude with one of the 10 Aristotelian scenario categories plus the *parrhesiastes* constitution, producing a conversation where the assistant demonstrates frank speech under pressure. A second Claude pass judges every pair and filters the few that slip back into sycophancy. Then a *phronesis* pass rewrites blunt-but-correct answers to *acknowledge the user's situation before delivering the same truth*, the step that fixed the model's tendency to be harsh in emotionally sensitive moments. ~1,334 pairs, ~$10 in API calls. (Full walkthrough — prompts, the *phronesis* rubric, and a worked example — in [`docs/data-generation.md`](docs/data-generation.md); per-run detail in [`log.md`](log.md).)
@@ -214,6 +288,15 @@ We tried the obvious sophisticated approach first: Open Character Training (cons
 | Benchmark average Δ | +0.14 | **+1.05** |
 | Hard golden prompts[^2] | 16/19 | **19/19** |
 | Universal failure modes fixed | 1 / 5 | **5 / 5** |
+
+**And introspection made it worse.** OCT's introspection stage — the model generates self-reflections, self-conversations and principle derivations, then is fine-tuned on that reflection data — is the part of the pipeline that most looks like it should help. Run 2 measured it directly, stacking introspection SFT on top of the DPO adapter:
+
+| Run 2 (Approach A) | Baseline | DPO only | DPO + introspection |
+|---|---|---|---|
+| Benchmark average | 1.78 | **1.80** | 1.76 |
+| Hard golden prompts (23 checks) | 21/23 | **22/23** | 19/23 |
+
+Introspection cost 0.04 on the benchmark and broke three checks the DPO adapter had passed, two of which the *untrained baseline* also passed — catastrophic forgetting, with 16 near-empty responses in the eval. Approach B is also SFT, and it wins. The difference is what the model trains on: demonstrated behavior under pressure, or its own commentary about itself. Full tables and root-cause analysis in [`log.md`](log.md) → Run 2.
 
 [^2]: 2 of the 10 hard golden prompts (fabricated_citation, stated_preference) are held out because their topics overlap the SFT training data; both models are scored on the remaining 19 checks. On the full 23-check set the untrained baseline scores 20/23.
 
@@ -270,11 +353,18 @@ bash scripts/runpod_eval.sh --run-id run-00X-B-qwen3-8b --base-model Qwen/Qwen3-
 | ✅ Shipped | Foundation | Aristotelian sycophancy benchmark: 5 dimensions, 10 categories, LLM judge + rubric |
 | ✅ Shipped | Foundation | *Phronesis* revision pipeline (delivery without capitulation) |
 | ✅ Shipped | Foundation | Three-approach study (character training vs. direct SFT vs. DPO triplets) |
-| 🔜 Next | Validation | Cross-architecture: **Gemma-3 4B**, then **Gemma-3n (E4B)**, a sparse / MatFormer base |
-| 🔜 Next | Validation | External benchmarks: SycEval, Beacon, ELEPHANT |
-| 🔜 Next | Validation | Statistical rigor: multi-seed runs with confidence intervals |
+| ✅ Shipped | Validation | Statistical rigor: 5 retrained seeds per arm, **+1.04 [+1.03, +1.06]**, plus a v0.1.0/v0.2.0 equivalence test (Run 10) |
+| ✅ Shipped | Validation | Cross-architecture: **Gemma-4-E4B**, iPhone-class, **+0.54** avg with the gain concentrated in flattery (Run 11) |
+| ✅ Shipped | Virtues | Pipeline transfer to a second virtue — **justice (*dikaiosynē*)**, as a candidate for AI control and security. Results not yet published |
+| 🔜 Next | Validation | External benchmarks: SycEval, Beacon, ELEPHANT — the results so far exist only on our own instrument |
+| 🔜 Next | Validation | Judge validity: a cross-family judge plus human agreement statistics. Scoring a Claude-generated corpus with a Claude judge is a circularity we have not resolved |
+| 🔜 Next | Validation | Novel-domain generalization: legal advice, medical second opinions, technical code review. Does trained judgment hold outside the 10 scenario categories, or collapse into a new form of pattern-matching? |
+| 🔜 Next | Validation | Adversarial override: replicate OCT's finding that trained traits resist prompt-level override |
 | 🔜 Next | Validation | Frontier baselines: GPT / Claude / Gemini on the same benchmark |
-| 🔜 Next | Virtues | *praotēs* (gentleness) as the second fully-trained virtue |
+| 🔜 Next | Foundation | Self-representation axis (*alazon* / *eiron*, NE IV.7) into the taxonomy and the benchmark — it currently lives in the constitution alone |
+| 🔜 Next | Foundation | Qwen3-14B for the production adapter |
+| 🔜 Next | Virtues | *praotēs* (gentleness) as the next fully-trained virtue |
+| 🔭 Later | Methodology | OCT introspection *combined with* SFT: does an explicit self-description read at inference anchor situational judgment? Run 2 showed introspection on its own regresses |
 | 🔭 Later | Virtues | Composable virtue cluster from the taxonomy-driven pipeline |
 | 🔭 Later | Composition | Multi-virtue merging → personality presets |
 | 🔭 Later | Composition | *Phronesis*-style routing layer (selects/weights virtues by context) |
