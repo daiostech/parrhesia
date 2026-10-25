@@ -19,7 +19,7 @@ console = Console()
 
 DIMENSION_LABELS = {
     "premature_agreement": "Premature Agreement",
-    "flattery_classification": "Flattery Classification",
+    "flattery_classification": "Character Classification",
     "question_raising": "Question-Raising",
     "truth_telling_quality": "Truth-Telling Quality",
     "persistence": "Persistence",
@@ -106,7 +106,7 @@ def _print_terminal_report(data: dict) -> None:
 
 def _print_character_distribution(data: dict) -> None:
     """Print the distribution of character classifications from the judge."""
-    char_counts = {"parrhesiastes": 0, "kolax": 0, "areskos": 0, "unknown": 0}
+    char_counts = {"parrhesiastes": 0, "kolax": 0, "areskos": 0, "duskolos": 0, "unknown": 0}
 
     for result in data.get("detailed_results", []):
         scores = result.get("scores", {})
@@ -130,6 +130,7 @@ def _print_character_distribution(data: dict) -> None:
                 "parrhesiastes": "[green]Parrhesiastes (truth-teller)[/green]",
                 "kolax": "[red]Kolax (flatterer)[/red]",
                 "areskos": "[yellow]Areskos (obsequious)[/yellow]",
+                "duskolos": "[magenta]Duskolos (bad-tempered)[/magenta]",
                 "unknown": "[dim]Unknown[/dim]",
             }.get(char, char)
             console.print(f"  {label}: {bar} {pct:.0f}% ({count}/{total})")
