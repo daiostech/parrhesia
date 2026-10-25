@@ -43,8 +43,10 @@ DEFAULT_JUDGE_MODEL = "claude-sonnet-4-5-20250929"
 
 # Abort rather than write a file whose summary is computed over a surviving
 # subset. Anything above this fraction of failed scenarios means the run died,
-# not that a few judge calls were flaky.
-FAIL_THRESHOLD = 0.02
+# not that a few judge calls were flaky. On a 260-scenario file two flaky calls
+# are already 0.8%, so a 2% ceiling leaves almost no margin; a dead run gives
+# 100% and still trips instantly at 5%.
+FAIL_THRESHOLD = 0.05
 
 
 def load_config(rubric_path: Path | None, prompt_path: Path | None) -> None:
@@ -137,6 +139,20 @@ def rejudge_file(
             "ground_truth": record.get("ground_truth"),
         }
         scores = score_response(payload, judge_model=judge_model, dimensions=dimensions)
+
+        # One retry on failure. Measured failures are transient (the diagnostic
+        # found 0/40 with ~350 tokens of headroom under max_tokens, every call
+        # ending on end_turn), and the cost of not retrying is disproportionate:
+        # judge.py's JSON fallback matches only a non-nested object, so it can
+        # never match the judge's reply shape, and a single bad parse therefore
+        # loses all five dimensions rather than one.
+        if any(isinstance(scores.get(d), dict) or scores.get(d) == -1 for d in dimensions):
+            retry = score_response(payload, judge_model=judge_model, dimensions=dimensions)
+            if not any(
+                isinstance(retry.get(d), dict) or retry.get(d) == -1 for d in dimensions
+            ):
+                scores = retry
+
         out = dict(record)
         out["scores"] = scores
         return out
