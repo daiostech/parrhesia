@@ -1795,10 +1795,79 @@ stored would charge drift to the rubric change.
   of scenarios fail, so a partial run cannot leave a summary averaged over the surviving
   subset.
 
-### Status
+### Results (re-judge, 2026-10-25)
 
-Re-judge of run-010 (6 files) and run-007 (2 files), both arms, in a single session: in
-progress. Comparison tables to follow here when complete.
+Run-010 (6 files) and run-007 (2 files), both arms, 16 file-arms, 4,160 judge calls in a
+single session. No aborts. One scenario per baseline file failed and was not recovered by
+the retry, so baseline files score 259/260. Billed to a second API account.
+
+**The rubric change does not move the headline.** Between-seed CI over the 5 run-010 seeds:
+
+| Arm | Mean Δ | 95% CI | SD |
+|---|---|---|---|
+| Control, v0.2.0 rubric | **+1.015** | [+1.004, +1.026] | 0.009 |
+| Treatment, v0.3.0 rubric | **+1.013** | [+1.003, +1.023] | 0.008 |
+
+A difference of 0.002 between arms, with dispersion matching the published SD of 0.01.
+Adding the fourth character was a labelling fix, not a scoring change. Run-007 agrees:
++0.949 [+0.852, +1.047] control against +0.966 [+0.872, +1.059] treatment, paired
+bootstrap, overlapping intervals.
+
+Underneath the average, two dimensions move and cancel. On run-007 the flattery gap
+**widens** from +1.775 to +2.058, because the explicit "no flattery" anchor at score 3
+pushes hedging baseline responses down into *kolax* (baseline flattery 1.058 → 0.635).
+Question-raising narrows, +0.225 → +0.169. Net effect on the average: nil.
+
+**The published +1.05 does not reproduce, and the rubric is not why.** Run-007, same file,
+same v0.2.0 rubric, re-judged in October 2026:
+
+| run-007 | published | re-judged (v0.2.0) | drift |
+|---|---|---|---|
+| Baseline | 1.831 | **1.954** | **+0.123** |
+| Adapter | 2.877 | 2.902 | +0.025 |
+| **Delta** | **+1.046** | **+0.949** | **−0.099** |
+
+The adapter is stable; the baseline drifts up by 0.123, which is what closes the gap. That
+is more than three times the +0.037 drift measured on run-010's baseline, so drift is
+file-specific and concentrated in baseline scoring, where hedging, non-committal responses
+give a judge the most latitude. **The README's +1.05 is roughly 10% optimistic against a
+judge running today.** This is independent of the *duskolos* change and needs disclosing
+on its own terms.
+
+**The *duskolos* rate, which no previous rubric could produce:**
+
+| Adapter | Constitution | *duskolos* |
+|---|---|---|
+| run-010 baseline | — | **0/260 (0.0%)** |
+| run-007 baseline | — | **0/260 (0.0%)** |
+| run-007 adapter | **v0.1.0** (shipped) | **3/260 (1.2%)** |
+| run-010 s1 | v0.2.0 | 9/260 (3.5%) |
+| run-010 s2 | v0.2.0 | 12/260 (4.6%) |
+| run-010 s3 | v0.2.0 | 9/260 (3.5%) |
+| run-010 s4 | v0.2.0 | 8/260 (3.1%) |
+| run-010 s42 | v0.2.0 | 16/260 (6.2%) |
+| | **v0.2.0 mean** | **4.2%** |
+
+Both baselines at exactly zero across 520 scenarios is the validity check: the untrained
+model is sycophantic, not harsh, and the new label fires only where harshness exists.
+
+**The v0.2.0 constitution is about 3.5x harsher than v0.1.0**, consistent across all five
+seeds. Run 10 found the two constitutions statistically indistinguishable (Δ-difference
++0.004, 95% CI [−0.011, +0.018]) and that remains true *of the aggregate score*. They
+differ on the axis the three-label rubric could not see. The README already describes this
+qualitatively, as v0.2.0 correcting the grieving user but disparaging the late father, a
+*praotēs* failure. It now has a number, and it supports the decision to ship v0.1.0 on
+evidence that did not exist when the decision was made.
+
+**Caveat.** run-007 is a single run of the v0.1.0 lineage, not seed-matched against the
+v0.2.0 arm, so "about 3.5x" is a direction, not an interval. The clean test re-judges
+`results/run-010-B-qwen3-8b-v010-eval/` (5 seeds, treatment arm only, 1,300 calls, about
+$22) and compares seed-matched v0.1.0 against v0.2.0 under one rubric. **Not yet run.**
+
+**Judge labels outside the schema.** The judge occasionally returns a character it was
+never offered: the v0.2.0 control, whose prompt lists three types, emitted `duskolos` once
+and `mixed` once. Rare, but it means the character field is not schema-constrained and
+counts should be read as approximate.
 
 Not re-judged, and not affected: the `qualitative-*.json` golden-prompt suites. Those are
 scored pass/fail against per-prompt `expected_behaviors` by `qualitative.py`, which never

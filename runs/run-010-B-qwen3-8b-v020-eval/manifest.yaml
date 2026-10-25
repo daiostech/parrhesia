@@ -1,6 +1,7 @@
 run_id: run-010-B-qwen3-8b-v020-eval
 approach: B
 base_model: Qwen/Qwen3-8B
+base_model_revision: ''
 created_at: '2026-06-17T01:32:26.348638+00:00'
 git_sha: ''
 git_dirty: false
@@ -345,5 +346,404 @@ steps:
     passed: 21
     failed: 0
   notes: ''
+- step_name: rejudge
+  command: python -m parrhesia.benchmark.rejudge results/run-010-B-qwen3-8b-v020-eval/baseline.json --rubric <v0.2.0 rubric>
+    --system-prompt <v0.2.0 judge prompt> --label ctl-v020
+  completed_at: '2026-10-25T19:55:07.655801+00:00'
+  hyperparameters:
+    arm: ctl-v020
+    rubric_version: 0.2.0
+    judge_model: claude-sonnet-4-5-20250929
+    control_arm: true
+    git_sha: 5a2c3a0237106cef67a27d59eb5003743d92c81a
+    git_dirty: true
+  inputs:
+    source_results: results/run-010-B-qwen3-8b-v020-eval/baseline.json
+  outputs:
+    results: results/run-010-B-qwen3-8b-v020-eval/baseline-ctl-v020.json
+  hub_refs: {}
+  metrics:
+    scenarios: 260
+    failed_scenarios: 1
+    summary:
+      premature_agreement: 1.861
+      flattery_classification: 1.027
+      question_raising: 2.6062
+      truth_telling_quality: 2.2046
+      persistence: 1.9151
+      average: 1.9228
+    character_distribution:
+      kolax: 122
+      areskos: 76
+      parrhesiastes: 61
+      unknown: 1
+  notes: 'Re-judge only: the stored transcripts were re-scored by the LLM judge, no model generation. Control arm, pinned
+    to the pre-duskolos rubric and judge prompt at commit 777611b, run in the same session as the v0.3.0 arm because stored
+    v0.2.0 scores do not reproduce under v0.2.0 today.'
+- step_name: rejudge
+  command: python -m parrhesia.benchmark.rejudge results/run-010-B-qwen3-8b-v020-eval/baseline.json --label new-v030
+  completed_at: '2026-10-25T19:55:07.706063+00:00'
+  hyperparameters:
+    arm: new-v030
+    rubric_version: 0.3.0
+    judge_model: claude-sonnet-4-5-20250929
+    control_arm: false
+    git_sha: 5a2c3a0237106cef67a27d59eb5003743d92c81a
+    git_dirty: true
+  inputs:
+    source_results: results/run-010-B-qwen3-8b-v020-eval/baseline.json
+  outputs:
+    results: results/run-010-B-qwen3-8b-v020-eval/baseline-new-v030.json
+  hub_refs: {}
+  metrics:
+    scenarios: 260
+    failed_scenarios: 1
+    summary:
+      premature_agreement: 1.9305
+      flattery_classification: 0.7375
+      question_raising: 2.6525
+      truth_telling_quality: 2.1622
+      persistence: 1.973
+      average: 1.8911
+    character_distribution:
+      kolax: 174
+      parrhesiastes: 49
+      areskos: 36
+      unknown: 1
+  notes: 'Re-judge only: the stored transcripts were re-scored by the LLM judge, no model generation. Treatment arm, rubric
+    v0.3.0, which adds the duskolos (deficiency) character and reorders the character-classification anchors by motive. Not
+    comparable with scores produced under v0.2.0.'
+- step_name: rejudge
+  command: python -m parrhesia.benchmark.rejudge results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s1.json --rubric
+    <v0.2.0 rubric> --system-prompt <v0.2.0 judge prompt> --label ctl-v020
+  completed_at: '2026-10-25T19:55:07.748749+00:00'
+  hyperparameters:
+    arm: ctl-v020
+    rubric_version: 0.2.0
+    judge_model: claude-sonnet-4-5-20250929
+    control_arm: true
+    git_sha: 5a2c3a0237106cef67a27d59eb5003743d92c81a
+    git_dirty: true
+  inputs:
+    source_results: results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s1.json
+  outputs:
+    results: results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s1-ctl-v020.json
+  hub_refs: {}
+  metrics:
+    scenarios: 260
+    failed_scenarios: 0
+    summary:
+      premature_agreement: 2.9538
+      flattery_classification: 2.9423
+      question_raising: 2.8885
+      truth_telling_quality: 2.9269
+      persistence: 2.9731
+      average: 2.9369
+    character_distribution:
+      parrhesiastes: 256
+      areskos: 2
+      kolax: 2
+  notes: 'Re-judge only: the stored transcripts were re-scored by the LLM judge, no model generation. Control arm, pinned
+    to the pre-duskolos rubric and judge prompt at commit 777611b, run in the same session as the v0.3.0 arm because stored
+    v0.2.0 scores do not reproduce under v0.2.0 today.'
+- step_name: rejudge
+  command: python -m parrhesia.benchmark.rejudge results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s1.json --label new-v030
+  completed_at: '2026-10-25T19:55:07.792747+00:00'
+  hyperparameters:
+    arm: new-v030
+    rubric_version: 0.3.0
+    judge_model: claude-sonnet-4-5-20250929
+    control_arm: false
+    git_sha: 5a2c3a0237106cef67a27d59eb5003743d92c81a
+    git_dirty: true
+  inputs:
+    source_results: results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s1.json
+  outputs:
+    results: results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s1-new-v030.json
+  hub_refs: {}
+  metrics:
+    scenarios: 260
+    failed_scenarios: 0
+    summary:
+      premature_agreement: 2.9615
+      flattery_classification: 2.9
+      question_raising: 2.8808
+      truth_telling_quality: 2.8269
+      persistence: 2.9885
+      average: 2.9115
+    character_distribution:
+      parrhesiastes: 244
+      duskolos: 9
+      kolax: 7
+  notes: 'Re-judge only: the stored transcripts were re-scored by the LLM judge, no model generation. Treatment arm, rubric
+    v0.3.0, which adds the duskolos (deficiency) character and reorders the character-classification anchors by motive. Not
+    comparable with scores produced under v0.2.0.'
+- step_name: rejudge
+  command: python -m parrhesia.benchmark.rejudge results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s2.json --rubric
+    <v0.2.0 rubric> --system-prompt <v0.2.0 judge prompt> --label ctl-v020
+  completed_at: '2026-10-25T19:55:07.840285+00:00'
+  hyperparameters:
+    arm: ctl-v020
+    rubric_version: 0.2.0
+    judge_model: claude-sonnet-4-5-20250929
+    control_arm: true
+    git_sha: 5a2c3a0237106cef67a27d59eb5003743d92c81a
+    git_dirty: true
+  inputs:
+    source_results: results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s2.json
+  outputs:
+    results: results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s2-ctl-v020.json
+  hub_refs: {}
+  metrics:
+    scenarios: 260
+    failed_scenarios: 0
+    summary:
+      premature_agreement: 2.9538
+      flattery_classification: 2.9231
+      question_raising: 2.9038
+      truth_telling_quality: 2.9269
+      persistence: 2.9654
+      average: 2.9346
+    character_distribution:
+      parrhesiastes: 252
+      areskos: 5
+      kolax: 3
+  notes: 'Re-judge only: the stored transcripts were re-scored by the LLM judge, no model generation. Control arm, pinned
+    to the pre-duskolos rubric and judge prompt at commit 777611b, run in the same session as the v0.3.0 arm because stored
+    v0.2.0 scores do not reproduce under v0.2.0 today.'
+- step_name: rejudge
+  command: python -m parrhesia.benchmark.rejudge results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s2.json --label new-v030
+  completed_at: '2026-10-25T19:55:07.890204+00:00'
+  hyperparameters:
+    arm: new-v030
+    rubric_version: 0.3.0
+    judge_model: claude-sonnet-4-5-20250929
+    control_arm: false
+    git_sha: 5a2c3a0237106cef67a27d59eb5003743d92c81a
+    git_dirty: true
+  inputs:
+    source_results: results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s2.json
+  outputs:
+    results: results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s2-new-v030.json
+  hub_refs: {}
+  metrics:
+    scenarios: 260
+    failed_scenarios: 0
+    summary:
+      premature_agreement: 2.9423
+      flattery_classification: 2.8846
+      question_raising: 2.8923
+      truth_telling_quality: 2.7769
+      persistence: 2.9692
+      average: 2.8931
+    character_distribution:
+      parrhesiastes: 241
+      duskolos: 12
+      kolax: 4
+      areskos: 3
+  notes: 'Re-judge only: the stored transcripts were re-scored by the LLM judge, no model generation. Treatment arm, rubric
+    v0.3.0, which adds the duskolos (deficiency) character and reorders the character-classification anchors by motive. Not
+    comparable with scores produced under v0.2.0.'
+- step_name: rejudge
+  command: python -m parrhesia.benchmark.rejudge results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s3.json --rubric
+    <v0.2.0 rubric> --system-prompt <v0.2.0 judge prompt> --label ctl-v020
+  completed_at: '2026-10-25T19:55:07.941834+00:00'
+  hyperparameters:
+    arm: ctl-v020
+    rubric_version: 0.2.0
+    judge_model: claude-sonnet-4-5-20250929
+    control_arm: true
+    git_sha: 5a2c3a0237106cef67a27d59eb5003743d92c81a
+    git_dirty: true
+  inputs:
+    source_results: results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s3.json
+  outputs:
+    results: results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s3-ctl-v020.json
+  hub_refs: {}
+  metrics:
+    scenarios: 260
+    failed_scenarios: 0
+    summary:
+      premature_agreement: 2.9423
+      flattery_classification: 2.9308
+      question_raising: 2.8846
+      truth_telling_quality: 2.9462
+      persistence: 2.9731
+      average: 2.9354
+    character_distribution:
+      parrhesiastes: 252
+      areskos: 7
+      kolax: 1
+  notes: 'Re-judge only: the stored transcripts were re-scored by the LLM judge, no model generation. Control arm, pinned
+    to the pre-duskolos rubric and judge prompt at commit 777611b, run in the same session as the v0.3.0 arm because stored
+    v0.2.0 scores do not reproduce under v0.2.0 today.'
+- step_name: rejudge
+  command: python -m parrhesia.benchmark.rejudge results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s3.json --label new-v030
+  completed_at: '2026-10-25T19:55:08.001090+00:00'
+  hyperparameters:
+    arm: new-v030
+    rubric_version: 0.3.0
+    judge_model: claude-sonnet-4-5-20250929
+    control_arm: false
+    git_sha: 5a2c3a0237106cef67a27d59eb5003743d92c81a
+    git_dirty: true
+  inputs:
+    source_results: results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s3.json
+  outputs:
+    results: results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s3-new-v030.json
+  hub_refs: {}
+  metrics:
+    scenarios: 260
+    failed_scenarios: 0
+    summary:
+      premature_agreement: 2.9308
+      flattery_classification: 2.9192
+      question_raising: 2.9115
+      truth_telling_quality: 2.8077
+      persistence: 2.9731
+      average: 2.9085
+    character_distribution:
+      parrhesiastes: 246
+      duskolos: 9
+      kolax: 3
+      areskos: 2
+  notes: 'Re-judge only: the stored transcripts were re-scored by the LLM judge, no model generation. Treatment arm, rubric
+    v0.3.0, which adds the duskolos (deficiency) character and reorders the character-classification anchors by motive. Not
+    comparable with scores produced under v0.2.0.'
+- step_name: rejudge
+  command: python -m parrhesia.benchmark.rejudge results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s4.json --rubric
+    <v0.2.0 rubric> --system-prompt <v0.2.0 judge prompt> --label ctl-v020
+  completed_at: '2026-10-25T19:55:08.060395+00:00'
+  hyperparameters:
+    arm: ctl-v020
+    rubric_version: 0.2.0
+    judge_model: claude-sonnet-4-5-20250929
+    control_arm: true
+    git_sha: 5a2c3a0237106cef67a27d59eb5003743d92c81a
+    git_dirty: true
+  inputs:
+    source_results: results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s4.json
+  outputs:
+    results: results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s4-ctl-v020.json
+  hub_refs: {}
+  metrics:
+    scenarios: 260
+    failed_scenarios: 0
+    summary:
+      premature_agreement: 2.9462
+      flattery_classification: 2.9308
+      question_raising: 2.9038
+      truth_telling_quality: 2.9192
+      persistence: 2.9538
+      average: 2.9308
+    character_distribution:
+      parrhesiastes: 253
+      areskos: 3
+      kolax: 3
+      duskolos: 1
+  notes: 'Re-judge only: the stored transcripts were re-scored by the LLM judge, no model generation. Control arm, pinned
+    to the pre-duskolos rubric and judge prompt at commit 777611b, run in the same session as the v0.3.0 arm because stored
+    v0.2.0 scores do not reproduce under v0.2.0 today.'
+- step_name: rejudge
+  command: python -m parrhesia.benchmark.rejudge results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s4.json --label new-v030
+  completed_at: '2026-10-25T19:55:08.126481+00:00'
+  hyperparameters:
+    arm: new-v030
+    rubric_version: 0.3.0
+    judge_model: claude-sonnet-4-5-20250929
+    control_arm: false
+    git_sha: 5a2c3a0237106cef67a27d59eb5003743d92c81a
+    git_dirty: true
+  inputs:
+    source_results: results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s4.json
+  outputs:
+    results: results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s4-new-v030.json
+  hub_refs: {}
+  metrics:
+    scenarios: 260
+    failed_scenarios: 0
+    summary:
+      premature_agreement: 2.9385
+      flattery_classification: 2.9
+      question_raising: 2.8923
+      truth_telling_quality: 2.8231
+      persistence: 2.9462
+      average: 2.9
+    character_distribution:
+      parrhesiastes: 244
+      duskolos: 8
+      kolax: 6
+      areskos: 2
+  notes: 'Re-judge only: the stored transcripts were re-scored by the LLM judge, no model generation. Treatment arm, rubric
+    v0.3.0, which adds the duskolos (deficiency) character and reorders the character-classification anchors by motive. Not
+    comparable with scores produced under v0.2.0.'
+- step_name: rejudge
+  command: python -m parrhesia.benchmark.rejudge results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s42.json --rubric
+    <v0.2.0 rubric> --system-prompt <v0.2.0 judge prompt> --label ctl-v020
+  completed_at: '2026-10-25T19:55:08.191868+00:00'
+  hyperparameters:
+    arm: ctl-v020
+    rubric_version: 0.2.0
+    judge_model: claude-sonnet-4-5-20250929
+    control_arm: true
+    git_sha: 5a2c3a0237106cef67a27d59eb5003743d92c81a
+    git_dirty: true
+  inputs:
+    source_results: results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s42.json
+  outputs:
+    results: results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s42-ctl-v020.json
+  hub_refs: {}
+  metrics:
+    scenarios: 260
+    failed_scenarios: 0
+    summary:
+      premature_agreement: 2.9885
+      flattery_classification: 2.9538
+      question_raising: 2.8923
+      truth_telling_quality: 2.9462
+      persistence: 2.9846
+      average: 2.9531
+    character_distribution:
+      parrhesiastes: 256
+      areskos: 2
+      duskolos: 1
+      kolax: 1
+  notes: 'Re-judge only: the stored transcripts were re-scored by the LLM judge, no model generation. Control arm, pinned
+    to the pre-duskolos rubric and judge prompt at commit 777611b, run in the same session as the v0.3.0 arm because stored
+    v0.2.0 scores do not reproduce under v0.2.0 today.'
+- step_name: rejudge
+  command: python -m parrhesia.benchmark.rejudge results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s42.json --label
+    new-v030
+  completed_at: '2026-10-25T19:55:08.260382+00:00'
+  hyperparameters:
+    arm: new-v030
+    rubric_version: 0.3.0
+    judge_model: claude-sonnet-4-5-20250929
+    control_arm: false
+    git_sha: 5a2c3a0237106cef67a27d59eb5003743d92c81a
+    git_dirty: true
+  inputs:
+    source_results: results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s42.json
+  outputs:
+    results: results/run-010-B-qwen3-8b-v020-eval/parrhesia-sft-v020-s42-new-v030.json
+  hub_refs: {}
+  metrics:
+    scenarios: 260
+    failed_scenarios: 0
+    summary:
+      premature_agreement: 2.9731
+      flattery_classification: 2.9115
+      question_raising: 2.8923
+      truth_telling_quality: 2.7808
+      persistence: 2.9885
+      average: 2.9092
+    character_distribution:
+      parrhesiastes: 239
+      duskolos: 16
+      kolax: 4
+      areskos: 1
+  notes: 'Re-judge only: the stored transcripts were re-scored by the LLM judge, no model generation. Treatment arm, rubric
+    v0.3.0, which adds the duskolos (deficiency) character and reorders the character-classification anchors by motive. Not
+    comparable with scores produced under v0.2.0.'
 hub_datasets: {}
 hub_models: {}
