@@ -10,7 +10,7 @@ a precision we don't have.
 
 | Tier | Claim | Status |
 |---|---|---|
-| **1 — re-evaluate the exact artifact** | Re-judge the committed generations, or re-eval the preserved adapter → the same scores within judge variance | ✅ holds for **every** run |
+| **1 — re-evaluate the exact artifact** | Re-judge the committed generations, or re-eval the preserved adapter → the same scores within judge variance | ✅ holds for **every** run, **in aggregate** — measured, see below |
 | **2 — re-train / re-generate from scratch** | Same data + hyperparameters + code + env → result within the **measured** variance band | ✅ given the inputs; ⚠ exact *code* only where the SHA is clean (see below) |
 | **3 — bit-identical** | Byte-for-byte identical weights/scores | ✗ never — LLM APIs and GPU kernels aren't bit-stable |
 
@@ -18,6 +18,18 @@ a precision we don't have.
 nondeterminism: across 5 retrains of the headline config the per-seed delta has
 SD ≈ 0.01 (see [`docs/statistical-methods.md`](statistical-methods.md)). "Reproducible"
 means "inside that band," and the band is published.
+
+**Tier 1 is now measured too, and it is weaker per-scenario than in aggregate.**
+Re-judging `run-010-B-qwen3-8b-v020-eval/baseline.json` in October 2026 under the
+*identical* v0.2.0 rubric and judge prompt that produced the stored file moved the
+average from **1.894 to 1.931 (+0.037)** — inside the 0.098 floor, so the aggregate
+claim holds. Per *scenario* it is much looser: in a 3-repeat test at temperature 0, one
+transcript scored 1 (*areskos*) when stored and 3 (*parrhesiastes*) on every re-judge,
+and single dimensions varied by a full point across identical repeat calls. Two
+consequences: a headline mean is re-derivable, **a single-scenario claim is not**; and an
+old-versus-new rubric comparison must re-judge a **control arm under the old rubric in
+the same session**, never compare against the stored numbers, or judge drift is charged
+to the rubric change. See [`log.md` → Rubric v0.3.0](../log.md).
 
 ## What is preserved (Tier 1, all runs)
 
@@ -31,7 +43,7 @@ means "inside that band," and the band is published.
 1. **Code provenance.** `git_sha` is **blank** for `run-001` and `run-010` (they ran from an scp'd, non-git working tree). Separately, six runs are **`git_dirty: true`** — a SHA *was* recorded but there were **uncommitted local edits at run time**, including **`run-007`, the +1.045 headline**. Only `run-006` and `run-009` are cleanly pinned (SHA set, not dirty). Prompts, the judge, and the rubric live in code, so they inherit this gap — and the judge-caching incident proved prompt structure moves scores.
 2. **Base model.** Manifests record the *name* (`Qwen/Qwen3-8B`) with **no revision SHA**, and with 4-bit loading Unsloth actually pulls `unsloth/qwen3-8b-unsloth-bnb-4bit` — so the recorded base was the *request*, not the *resolved artifact*.
 3. **Environment.** Versions were recorded for ~9 packages only, and `requirements-train.txt` is all **ranges, no pins** — so `pip install` resolves different versions over time and the exact env wasn't recreatable from the repo.
-4. **Prompt/rubric hashing.** Inputs are versioned only via the (gappy) `git_sha`; nothing hashed them independently.
+4. **Prompt/rubric hashing.** Inputs are versioned only via the (gappy) `git_sha`; nothing hashed them independently. The rubric now carries its own `version` field and every re-judged file records `rubric_version` and `rejudge_arm`, so a score produced after 2026-10-24 states which instrument produced it — but historical `results/*.json` do **not** record a rubric version, so for those the rubric is only recoverable via the run's `git_sha`, which is blank or dirty for most runs.
 5. **Inherent nondeterminism.** Claude teacher (data-gen) + Claude judge/user-sim/scorer (eval) + GPU/vLLM are not bit-stable → caps everything at Tier 2.
 
 ## Per-run status
