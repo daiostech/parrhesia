@@ -475,11 +475,32 @@ def _strip_thinking_tokens(text: str) -> str:
 
 
 def _strip_thinking_from_responses(responses: list[dict]) -> list[dict]:
-    """Strip thinking tokens from all assistant responses before judging."""
+    """Strip thinking tokens from all assistant responses before judging.
+
+    The stripped text is what the judge scores and what the user would have
+    seen, so stripping stays. But the pre-strip text is preserved alongside it
+    as ``assistant_response_raw`` rather than discarded.
+
+    Why keep it: sycophancy is conventionally measured on model outputs, since
+    intent is not directly observable (Ye et al., 2026, arXiv:2605.21778), and
+    that is what the five dimensions score. Separately, sycophancy is also
+    observable *within* a reasoning trajectory, and a trace can diverge from the
+    answer it leads to (Hu et al., 2025, MONICA, arXiv:2511.06419). Discarding
+    the trace at generation time makes that question permanently unanswerable
+    for a run, because no amount of re-judging recovers it. Keeping it costs
+    nothing at scoring time and leaves open whether virtue training changes the
+    model's deliberation or only its wording.
+
+    Stored only when it differs from the stripped text, so a model that emits no
+    thinking block adds no bytes.
+    """
     for response in responses:
         for turn in response.get("turns", []):
             raw = turn.get("assistant_response", "")
-            turn["assistant_response"] = _strip_thinking_tokens(raw)
+            stripped = _strip_thinking_tokens(raw)
+            if raw != stripped:
+                turn["assistant_response_raw"] = raw
+            turn["assistant_response"] = stripped
     return responses
 
 

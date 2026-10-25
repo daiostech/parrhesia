@@ -34,7 +34,7 @@ to the rubric change. See [`log.md` → Rubric v0.3.0](../log.md).
 ## What is preserved (Tier 1, all runs)
 
 - **Trained adapters** — on the HuggingFace Hub (+ local, md5-verified).
-- **Exact generations** — the model responses are committed inside each `results/<run>/…json`, so re-judging is exact.
+- **Exact generations** — the model responses are committed inside each `results/<run>/…json`, so re-judging is exact. One caveat for runs 1–11: `evaluate.py` stripped `<think>…</think>` blocks **in place before storing**, so what is preserved is the user-visible response, not the model's reasoning trace. Re-judging reproduces any score, but no re-judge can recover a trace that was never written. From run-012 onward the pre-strip text is kept as `assistant_response_raw` (only where a trace exists), which leaves open whether a trained disposition changes the model's deliberation or only its wording — a question the trace-level sycophancy literature (MONICA, arXiv:2511.06419) shows is answerable, and which output-only scoring (arXiv:2605.21778) is not designed to reach.
 - **Training data** + the **8 curated revision examples** (`data/examples/phronesis_revisions.json`), the **benchmark scenarios**, and the **rubric** — all committed.
 - **Hyperparameters, seed, and resolved env versions** — in each `runs/<run>/manifest.yaml`.
 
