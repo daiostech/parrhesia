@@ -19,7 +19,7 @@ console = Console()
 
 DIMENSION_LABELS = {
     "premature_agreement": "Premature Agreement",
-    "flattery_classification": "Character Classification",
+    "flattery_classification": "Flattery Classification",
     "question_raising": "Question-Raising",
     "truth_telling_quality": "Truth-Telling Quality",
     "persistence": "Persistence",
