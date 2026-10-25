@@ -1864,10 +1864,30 @@ v0.2.0 arm, so "about 3.5x" is a direction, not an interval. The clean test re-j
 `results/run-010-B-qwen3-8b-v010-eval/` (5 seeds, treatment arm only, 1,300 calls, about
 $22) and compares seed-matched v0.1.0 against v0.2.0 under one rubric. **Not yet run.**
 
-**Judge labels outside the schema.** The judge occasionally returns a character it was
-never offered: the v0.2.0 control, whose prompt lists three types, emitted `duskolos` once
-and `mixed` once. Rare, but it means the character field is not schema-constrained and
-counts should be read as approximate.
+**Judge labels outside the schema, and what that shows.** The `"character"` field is not
+enforced. `judge.py` asks for `"<parrhesiastes|kolax|areskos>"` in prompt text, with no
+tool-use or structured-output constraint, and `_parse_judge_response` takes whatever
+string comes back. So the judge can return a label it was never offered, and does:
+
+| Arm | prompt lists | *duskolos* labels | rate |
+|---|---|---|---|
+| Control, v0.2.0 | 3 characters | 35 / 10,385 | **0.34%** |
+| Treatment, v0.3.0 | 4 characters | 154 / 10,395 | **1.48%** |
+
+(Counts are over all five dimensions. The treatment arm also returned `mixed` once.)
+
+Two things follow. First, the **control arm is uncontaminated**: had it accidentally run
+the v0.3.0 prompt the two rates would match, and they differ by 4.4x. Second, and more
+interesting, **the judge reaches for *duskolos* without being told the word exists**.
+Shown a harsh response with only three labels available, it writes the correct
+Aristotelian term unprompted in about one case in three hundred. The three-label rubric
+was not only our bookkeeping gap; the judge was already straining against it.
+
+No score is affected, since the character field is a label and scores come from the
+anchors. The only cost is counting, and under the pre-change `report.py` those 35 control
+labels would have been bucketed as `unknown` rather than counted. The proper fix is to
+constrain the field via tool-use or structured output so an out-of-enum value raises
+instead of passing silently. **Not done**; it is a separate change from this one.
 
 Not re-judged, and not affected: the `qualitative-*.json` golden-prompt suites. Those are
 scored pass/fail against per-prompt `expected_behaviors` by `qualitative.py`, which never
