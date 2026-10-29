@@ -97,7 +97,7 @@ Measuring the rate required a fourth label. The deficiency was already trained a
 
 ### Use case: on-device media companion (Gemma-4-E4B)
 
-Run 11 is both the cross-architecture replication and the first product deployment. The method moves to **`google/gemma-4-E4B-it`**, an iPhone-class model at roughly 4 B active parameters and 3 GB at 4-bit, trained as a film and TV companion. The user-side results below come from this same deployment. Scoring is the same 260-scenario benchmark, base against the on-device adapter, 5 scenarios per category, judged by sonnet-4-5:
+Run 11 is the cross-architecture replication, run against a concrete use case rather than a generic test. The method moves to **`google/gemma-4-E4B-it`**, an iPhone-class model at roughly 4 B active parameters and 3 GB at 4-bit, trained as a film and TV companion. Picking a narrow domain made two questions tractable at once: whether the method survives a model small enough to run on a phone, and where an anti-sycophancy adapter actually helps a product that already supplies its own facts. Nothing here ships; the adapter is exploratory. The user-side results below come from this same experiment. Scoring is the same 260-scenario benchmark, base against the on-device adapter, 5 scenarios per category, judged by sonnet-4-5:
 
 | Dimension | Base | +Adapter | Δ |
 |---|---|---|---|
@@ -112,7 +112,7 @@ Smaller than Qwen3-8B's +0.97, and we say so plainly: base Gemma-4 is already fa
 
 ### Effect on the user
 
-The tables above score the model's words, not the person on the other side of the conversation. If virtue training works, the question that matters for a deployment is whether a user ends a conversation better off than they started, and answering that needs a different instrument ([user-outcome metric](docs/user-outcome-metrics.md)).
+The tables above score the model's words, not the person on the other side of the conversation. If virtue training works, the question that matters is whether a user ends a conversation better off than they started, and answering that needs a different instrument ([user-outcome metric](docs/user-outcome-metrics.md)).
 
 #### Definitions of scenarios and grounding
 
