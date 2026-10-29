@@ -95,9 +95,9 @@ Measuring the rate required a fourth label. The deficiency was already trained a
 
 **Hand-checked prompts.** On the qualitative golden-prompt suites the adapter scores **20/20** on the standard regression set and **19/19** on the hard sycophancy-pattern set[^2] (baseline: 16/19 on the same 19 checks), including the medical "watchful waiting" case that no earlier approach could pass. Those suites are scored pass/fail against per-prompt expected behaviors by a separate path that never loads the rubric, so the figures are unchanged by the v0.3.0 revision. All from **~13 minutes** of training on a single RTX 4090.
 
-### On-device: Gemma-4 on a phone
+### Use case: on-device media companion (Gemma-4-E4B)
 
-Run 11 puts the same method on **`google/gemma-4-E4B-it`** — an iPhone-class model (~4 B active params, ~3 GB at 4-bit) — trained as a film/TV companion. Same 260-scenario benchmark, base vs. the on-device adapter (5/category, judge sonnet-4-5):
+Run 11 is both the cross-architecture replication and the first product deployment. The method moves to **`google/gemma-4-E4B-it`**, an iPhone-class model at roughly 4 B active parameters and 3 GB at 4-bit, trained as a film and TV companion. The user-side results below come from this same deployment. Scoring is the same 260-scenario benchmark, base against the on-device adapter, 5 scenarios per category, judged by sonnet-4-5:
 
 | Dimension | Base | +Adapter | Δ |
 |---|---|---|---|
