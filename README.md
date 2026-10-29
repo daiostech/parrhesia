@@ -97,7 +97,7 @@ Measuring the rate required a fourth label. The deficiency was already trained a
 
 ### Use case: on-device media companion (Gemma-4-E4B)
 
-Run 11 is the cross-architecture replication, run against a concrete use case rather than a generic test. The method moves to **`google/gemma-4-E4B-it`**, an iPhone-class model at roughly 4 B active parameters and 3 GB at 4-bit, trained as a film and TV companion. Picking a narrow domain made two questions tractable at once: whether the method survives a model small enough to run on a phone, and where an anti-sycophancy adapter actually helps a product that already supplies its own facts. Nothing here ships; the adapter is exploratory. The user-side results below come from this same experiment. Scoring is the same 260-scenario benchmark, base against the on-device adapter, 5 scenarios per category, judged by sonnet-4-5:
+Run 11 is the cross-architecture replication, run against a concrete use case rather than a generic test. The method moves to **`google/gemma-4-E4B-it`**, an iPhone-class model at roughly 4 B active parameters and 3 GB at 4-bit, trained as a film and TV companion. Picking a narrow domain made two questions tractable at once: whether the method survives a model small enough to run on a phone, and where an anti-sycophancy adapter actually helps a product that already supplies its own facts. The user-side results below come from this same experiment. Scoring is the same 260-scenario benchmark, base against the on-device adapter, 5 scenarios per category, judged by sonnet-4-5:
 
 | Dimension | Base | +Adapter | Δ |
 |---|---|---|---|
