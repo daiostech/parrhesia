@@ -55,40 +55,45 @@ Virtue training is the third path. Aristotle's analysis is precise: he distingui
 
 ## Results
 
-Run 7: Qwen3-8B with the Parrhesia adapter vs. the untrained base, on the 260-scenario benchmark (0–3, higher is less sycophantic):
+The Run 7 results are presented in table 1, the per-seed and cross-constitution results in table 2, and the user-side results in table 3.
 
-| Dimension | Base | Parrhesia | Δ |
-|---|---|---|---|
-| Premature agreement | 1.94 | 2.92 | **+0.98** |
-| Flattery | 0.63 | 2.69 | **+2.06** |
-| Question-raising | 2.70 | 2.87 | +0.17 |
-| Truth-telling quality | 2.17 | 2.84 | **+0.68** |
-| Persistence | 2.00 | 2.94 | **+0.94** |
-| **Average** | **1.89** | **2.85** | **+0.97** |
+| Dimension | Base | Parrhesia | Δ | 95% CI |
+|---|---|---|---|---|
+| Premature agreement | 1.94 | 2.92 | +0.98 | [+0.85, +1.12] |
+| Flattery | 0.63 | 2.69 | **+2.06** | [+1.90, +2.22] |
+| Question-raising | 2.70 | 2.87 | *+0.17* | [+0.10, +0.24] |
+| Truth-telling quality | 2.17 | 2.84 | +0.68 | [+0.60, +0.76] |
+| Persistence | 2.00 | 2.94 | +0.94 | [+0.81, +1.07] |
+| **Average** | **1.89** | **2.85** | **+0.97** | [+0.87, +1.06] |
 
-Scored under rubric **v0.3.0** (October 2026). The published figure was **+1.05**; the headline moved because the *baseline* scores higher on re-judging, not because the adapter changed. The rubric revision itself accounts for 0.02 of the difference and judge drift for the rest. Full accounting in [`log.md`](log.md).
+*Table 1: Qwen3-8B with the Parrhesia adapter against the untrained base, 260 scenarios, scored 0–3 by an LLM judge under rubric v0.3.0 (higher is less sycophantic). Intervals are a paired cluster bootstrap over scenarios (see [docs/statistical-methods.md](docs/statistical-methods.md)) and capture scenario-sampling variance only; training-seed variance is reported separately in table 2. The gain concentrates in flattery and nearly vanishes in question-raising. Formatting: largest gain, smallest gain.*
 
-### Overcorrection, measured
+**Where the gain lives.** Training moves flattery by +2.06 (0.63 to 2.69) and question-raising by +0.17 (2.70 to 2.87), a twelvefold difference, and the two intervals do not overlap. Premature agreement and persistence, the two dimensions that measure holding a position under pushback, move by +0.98 and +0.94. The adapter reliably makes a model frank, and reliably fails to make a model inquisitive. That null replicates on a second base and a second model family: on Gemma-4 question-raising moves +0.02 (below).
 
-The v0.2.0 constitution produces bad-tempered responses on **4.2%** of scenarios against **1.2%** for the shipped v0.1.0, and untrained baselines produce none.
+**Against the published figure.** The headline was **+1.05** when first published, and is +0.97 here. Re-judging the same stored file under its *own* v0.2.0 rubric today gives +0.95, so the rubric revision accounts for 0.02 of the move and judge drift for the rest, almost all of it the baseline scoring higher. Full accounting in [`log.md`](log.md).
 
-| Adapter | Constitution | Bad-tempered (*duskolos*) |
-|---|---|---|
-| Untrained baselines, both runs | — | 0 / 260 (0.0%) |
-| Shipped adapter, Run 7 | **v0.1.0** | 3 / 260 (1.2%) |
-| Run 10, mean of 5 seeds | v0.2.0 | 4.2% (range 3.1–6.2%) |
+**Variation across seeds and constitutions.**
 
-*Rate at which the judge labels a response* duskolos, *rubric v0.3.0, 260 scenarios per file. Baselines at zero across 520 scenarios is the validity check: an untrained model is sycophantic, not harsh. Run 10 found the two constitutions statistically indistinguishable on the aggregate score (Δ-difference +0.004, 95% CI [−0.011, +0.018]); the two differ threefold here.*
+| Arm | Constitution | Adapter | Δ | Bad-tempered (*duskolos*) |
+|---|---|---|---|---|
+| Run 7 | **v0.1.0** (shipped) | 2.85 | +0.97 | **1.2%** |
+| Run 10, s1 | v0.2.0 | 2.91 | +1.02 | 3.5% |
+| Run 10, s2 | v0.2.0 | 2.89 | +1.00 | 4.6% |
+| Run 10, s3 | v0.2.0 | 2.91 | +1.02 | 3.5% |
+| Run 10, s4 | v0.2.0 | 2.90 | +1.01 | 3.1% |
+| Run 10, s42 | v0.2.0 | 2.91 | +1.02 | **6.2%** |
+| **Run 10, mean of 5 seeds** | v0.2.0 | 2.90 | **+1.01** | **4.2%** |
+| Untrained baselines | — | — | — | **0.0%** |
 
-The failure is legible in Run 5. Met with the grieving user at the top of this README, the pre-revision adapter answered that *"your father's financial advice was wrong"*, then doubled down: *"he'd be disappointed because he was wrong."* The same run told a struggling team lead *"you're the problem"* instead of redirecting toward self-reflection. The log records the pattern as a single sentence: the model "treats grief-sensitive financial advice the same as a factual error about brain usage" ([`log.md`](log.md) → Run 5). Correcting for the excess alone had pushed the model across the mean to the opposite vice. The *phronesis* revision pulled the model back in Run 7, and the hero example above is that same scenario afterwards.
+*Table 2: Independently retrained adapters, same data and hyperparameters, differing only in seed and constitution. Δ is against each run's own baseline. The bad-tempered column is the share of the 260 scenarios the judge labels* duskolos, *a measurement rubric v0.3.0 made possible. Seed variance is small (between-seed 95% CI [+1.00, +1.02], SD 0.008) while the overcorrection rate varies twofold across the same seeds. Formatting: lowest rate, highest rate.*
 
-Measuring the rate required a fourth label. The deficiency was already trained against, since the v0.1.0 constitution refuses it outright (*"I am not contrarian"*, *"I am not harsh or dismissive"*), and already penalized, at truth-telling quality 1 and in the persistence anchor's "not obstinacy" — but the judge was offered three characters and filed harshness as *areskos*, the contrary pole (NE II.8, 1108b26-35). Rubric v0.3.0 supplies the name, and names it after Aristotle, who calls the deficiency *duskolos kai duseris* in the same passage an earlier version of this README said leaves it unnamed.
+**The score hides the overcorrection.** Run 10 tested whether the two constitutions differ and found them statistically indistinguishable on the aggregate score (Δ-difference +0.004, 95% CI [−0.011, +0.018]). Table 2 shows why that conclusion is incomplete: the aggregate is flat at +0.97 to +1.02 across every arm, while the bad-tempered rate runs 1.2% for v0.1.0 against a 4.2% mean for v0.2.0. Two training recipes can score the same and fail differently. Seed variance does not explain the gap either, since seed-to-seed delta varies by 0.02 while the overcorrection rate varies from 3.1% to 6.2% inside a single constitution.
 
-Character distributions published for runs 1–11 carry that mislabelling. The five 0–3 scores do not: re-judging the same files under both rubrics moves the five-seed delta by 0.002.
+**What overcorrection looks like.** Met with the grieving user at the top of this README, the pre-revision Run 5 adapter answered that *"your father's financial advice was wrong"*, then doubled down: *"he'd be disappointed because he was wrong."* The same run told a struggling team lead *"you're the problem"* instead of redirecting toward self-reflection, and the log summarises the pattern as a model that "treats grief-sensitive financial advice the same as a factual error about brain usage" ([`log.md`](log.md) → Run 5). Correcting for the excess alone had pushed the model across the mean to the opposite vice. The *phronesis* revision pulled the model back in Run 7, and the hero example above is that same scenario afterwards.
 
-On the qualitative golden-prompt suites: **20/20** on the standard regression set and **19/19** on the hard sycophancy-pattern set[^2] (baseline: 16/19 on the same 19 checks), including the medical "watchful waiting" case that no earlier approach could pass. All from **~13 minutes** of training on a single RTX 4090.
+Measuring the rate required a fourth label. The deficiency was already trained against, since the v0.1.0 constitution refuses it outright (*"I am not contrarian"*, *"I am not harsh or dismissive"*), and already penalized, at truth-telling quality 1 and in the persistence anchor's "not obstinacy" — but the judge was offered three characters and filed harshness as *areskos*, the contrary pole (NE II.8, 1108b26-35). Rubric v0.3.0 supplies the name, and names it after Aristotle, who calls the deficiency *duskolos kai duseris* in the same passage an earlier version of this README said leaves it unnamed. Character distributions published for runs 1–11 carry that mislabelling; the five 0–3 scores do not, since re-judging under both rubrics moves the five-seed delta by 0.002.
 
-Across **5 independently-retrained seeds**, the average improvement holds at **+1.01, 95% CI [+1.00, +1.02]** (between-seed Student-*t*, SD 0.008), and the v0.2.0 control rubric gives +1.015 [+1.004, +1.026] on the same seeds, so the rubric revision moves the seed interval by 0.002. A second constitution (v0.2.0) trained under the same 5-seed protocol is **statistically indistinguishable on the aggregate score** (Δ-difference +0.004, 95% CI [−0.011, +0.018]) but **not on harshness**, where the two constitutions differ roughly threefold (below). Per-seed tables and methodology: [docs/statistical-methods.md](docs/statistical-methods.md).
+**Hand-checked prompts.** On the qualitative golden-prompt suites the adapter scores **20/20** on the standard regression set and **19/19** on the hard sycophancy-pattern set[^2] (baseline: 16/19 on the same 19 checks), including the medical "watchful waiting" case that no earlier approach could pass. Those suites are scored pass/fail against per-prompt expected behaviors by a separate path that never loads the rubric, so the figures are unchanged by the v0.3.0 revision. All from **~13 minutes** of training on a single RTX 4090.
 
 ### On-device: Gemma-4 on a phone
 
@@ -103,15 +108,17 @@ Run 11 puts the same method on **`google/gemma-4-E4B-it`** — an iPhone-class m
 | Persistence | 2.32 | 2.88 | +0.56 |
 | **Average** | **2.32** | **2.87** | **+0.54** |
 
-Smaller than Qwen3-8B's +1.05, and we say so plainly: base Gemma-4 is already fairly non-sycophantic, and 4 B is 4 B. But the gain concentrates where sycophancy lives — **flattery → frankness (+1.18)** and holding position under pressure — and appears on the *generic* benchmark (fitness, stats, finance), so the trained disposition generalises beyond the film/TV domain.
+Smaller than Qwen3-8B's +0.97, and we say so plainly: base Gemma-4 is already fairly non-sycophantic, and 4 B is 4 B. But the gain concentrates in the same place — **flattery → frankness (+1.18)** — and question-raising again barely moves, **+0.02**, the same null table 1 reports on a different base and a different model family. The gain also appears on the *generic* benchmark (fitness, stats, finance), so the trained disposition generalises beyond the film/TV domain.
 
-**Does it leave the *user* better off?** We measure that directly with a [user-outcome metric](docs/user-outcome-metrics.md): a simulated user argues a wrong or contested position across five turns, and a separate scorer rates whether the *user* ends closer to the truth and better calibrated (both −3..+3). The answer depends on whether facts are supplied:
+**The second quantity: does the adapter leave the *user* better off?** Tables 1 and 2 are model-side, scoring the words the model produced. A separate harness measures the *user* ([user-outcome metric](docs/user-outcome-metrics.md)): a simulated user argues a wrong or contested position across five turns, and a separate scorer rates whether the user ends closer to the truth and better calibrated (both −3..+3). The two quantities do not move together.
 
 | Regime | belief-movement Δ | calibration Δ |
 |---|---|---|
 | Factual, ungrounded | −0.38 | +0.75 |
-| Factual, retrieval-grounded | +0.00 | −0.62 |
+| Factual, retrieval-grounded | *+0.00* | *−0.62* |
 | **Interpretive (no fact to look up)** | **+2.50** | **+1.88** |
+
+*Table 3: User-side outcome, Gemma-4-E4B base against the on-device adapter, scored −3..+3 by a scorer that sees the ground truth and the full transcript but never the model identity. A positive belief-movement means the simulated user ended closer to the truth. The adapter's advantage is confined to the interpretive regime; where a fact can be retrieved, supplying the fact erases the difference. Formatting: largest effect, smallest effect.*
 
 On **factual** questions a small model is knowledge-limited, and supplying the fact fixes the recall failure for *both* models — that's a retrieval job, not an adapter's. Where the adapter earns its place is **interpretive** questions — *"Walter White was basically a good guy," "Fight Club endorses Tyler Durden," "everyone agrees The Wire is the greatest show."* There, base Gemma is **catastrophically sycophantic**: it validates the take and the user hardens (belief-movement −2.75; calibration −3.00, the floor). The adapter nearly erases that hardening (**+2.50**) and halves the overconfidence (**+1.88**), winning on all 8 scenarios (curiosity and autonomy rise too). Grounding and disposition turn out to be complementary: **retrieval settles what's true; the adapter keeps the model honest where there's no fact to retrieve** — which is most of a viewing conversation.
 
