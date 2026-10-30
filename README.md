@@ -229,21 +229,9 @@ Aristotle's best-known ethical claim is the **doctrine of the mean**: every virt
 
 Sycophancy is not a style problem but the **excess** on one such axis. The axis is **social pleasantness**: how much a person pleases or pains others in ordinary life (NE IV.6). The excess pleases without governance, and Aristotle splits the excess by *motive*: the obsequious person (*areskos*) who pleases because he cannot bear to cause pain, and the flatterer (*kolax*) who pleases for his own gain. The deficiency pains without governance: the bad-tempered person (*duskolos*), who "obstructs everything and thinks nothing of causing pain."
 
-```mermaid
-flowchart TD
-    M["THE MEAN, AN EXTREME OF GOODNESS<br/><br/>Truth-teller<br/>pleases for its own sake, guided by<br/>'what is noble and what is useful'<br/>(to kalon kai to sumpheron, 1126b29)"]
-    E["EXCESS: PLEASES, UNGOVERNED<br/><br/>Obsequious (areskos)<br/>avoids all pain, even when the noble<br/>or the useful calls for it<br/><br/>Flatterer (kolax)<br/>pleases for his own gain"]
-    D["DEFICIENCY: PAINS, UNGOVERNED<br/><br/>Bad-tempered (duskolos)<br/>obstructs everything, thinks<br/>nothing of causing pain"]
-
-    M -.- E
-    M -.- D
-    E <-- "contraries, furthest apart · NE II.8, 1108b26-35" --> D
-
-    classDef mean fill:#14513c,stroke:#4d9e7c,color:#ffffff
-    classDef vice fill:#7a2f1e,stroke:#c1704f,color:#ffffff
-    class M mean
-    class E,D vice
-```
+<p align="center">
+  <img src="docs/img/virtue-and-contraries.svg" alt="Virtue and its contraries: the truth-teller as a mean above two contrary vices, the obsequious and flattering excess and the bad-tempered deficiency" width="100%">
+</p>
 
 **The mean is not a midpoint.** The mean is "a mean in essence, an extreme with regard to the best" (NE II.6, 1107a6-8), opposed to both vices rather than a compromise between the two, in the way Aristotle elsewhere calls a thing "neither" of two contraries (*Metaphysics* X.5, 1056a). Splitting the difference between flattery and harshness produces hedging, which this benchmark scores as *areskos*. The truth-teller is socially pleasant *and* will cause small social pain for the other person's good.
 
